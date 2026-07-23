@@ -16,8 +16,28 @@ import { NavigationContainer } from '@react-navigation/native';
 
 import { ThemeProvider } from './src/design-system';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { navigationRef } from './src/navigation/navigationRef';
+import { ROUTES } from './src/navigation/routes';
 import { useAuthStore } from './src/stores/authStore';
 import { useQueueStore } from './src/stores/queueStore';
+import {
+  setupAndroidChannels,
+  registerForPushNotifications,
+  addNotificationResponseListener,
+} from './src/services/pushNotifications';
+
+// Bildirime tıklanınca ilgili ekrana git.
+function routeNotification(data: Record<string, unknown>) {
+  if (!navigationRef.isReady()) return;
+  const deliveryId = typeof data.deliveryId === 'string' ? data.deliveryId : undefined;
+  if (!deliveryId) return;
+  const kind = data.kind;
+  if (kind === 'delivery_completed' || kind === 'delivery_failed') {
+    navigationRef.navigate(ROUTES.DELIVERY_DETAIL, { deliveryId });
+  } else {
+    navigationRef.navigate(ROUTES.TRACK, { deliveryId });
+  }
+}
 
 // Fontlar + oturum geri yükleme bitene kadar splash açık kalsın.
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +60,13 @@ export default function App() {
     useQueueStore.getState().init();
   }, [restore]);
 
+  // Push: kanallar + izin/kayıt + tıklama yönlendirmesi.
+  useEffect(() => {
+    setupAndroidChannels();
+    registerForPushNotifications();
+    return addNotificationResponseListener(routeNotification);
+  }, []);
+
   const ready = (fontsLoaded || Boolean(fontError)) && !restoring;
 
   const onLayoutRootView = useCallback(() => {
@@ -55,7 +82,7 @@ export default function App() {
       <SafeAreaProvider>
         <KeyboardProvider>
           <ThemeProvider preference="system">
-            <NavigationContainer>
+            <NavigationContainer ref={navigationRef}>
               <RootNavigator />
             </NavigationContainer>
           </ThemeProvider>
