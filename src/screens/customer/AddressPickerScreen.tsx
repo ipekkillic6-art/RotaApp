@@ -28,6 +28,9 @@ export interface AddressPickerScreenProps {
   /** Overrides the results list. Empty array renders the no-results state. */
   results?: Address[];
   locationPermission?: 'granted' | 'denied';
+  /** Konum alınıyor (GPS + reverse geocode). */
+  locating?: boolean;
+  onUseCurrentLocation?: () => void;
   onSelect?: (address: Address) => void;
   onClose?: () => void;
 }
@@ -43,6 +46,8 @@ export function AddressPickerScreen({
   query: initialQuery = '',
   results,
   locationPermission = 'granted',
+  locating = false,
+  onUseCurrentLocation,
   onSelect,
   onClose,
 }: AddressPickerScreenProps) {
@@ -59,8 +64,13 @@ export function AddressPickerScreen({
         )
       : savedAddresses);
 
-  const shortcut = (icon: typeof Crosshair, label: string, hint: string) => (
-    <Touchable onPress={() => {}} feedback="opacity" accessibilityLabel={label}>
+  const shortcut = (
+    icon: typeof Crosshair,
+    label: string,
+    hint: string,
+    onPress?: () => void,
+  ) => (
+    <Touchable onPress={onPress ?? (() => {})} feedback="opacity" accessibilityLabel={label}>
       <View
         style={{
           flexDirection: 'row',
@@ -124,7 +134,12 @@ export function AddressPickerScreen({
           />
 
           <Surface tone="elevated" radius="lg" padding="lg" bordered>
-            {shortcut(Crosshair, 'Güncel konumu kullan', 'GPS ile otomatik doldur')}
+            {shortcut(
+              Crosshair,
+              'Güncel konumu kullan',
+              locating ? 'Konum alınıyor…' : 'GPS ile otomatik doldur',
+              onUseCurrentLocation,
+            )}
             <Divider />
             {shortcut(MapIcon, 'Haritada seç', 'Pini sürükleyerek tam nokta belirle')}
           </Surface>

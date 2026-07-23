@@ -15,6 +15,7 @@ import { useDeliveryStore } from '../../stores/deliveryStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { recentAddresses } from '../../mocks/addresses';
 import type { Delivery } from '../../types';
@@ -141,7 +142,23 @@ export function CreateContainer() {
 
 export function AddressPickerContainer() {
   const navigation = useNavigation<Nav>();
-  return <AddressPickerScreen onClose={() => navigation.goBack()} onSelect={() => navigation.goBack()} />;
+  const { resolve, loading, permission } = useCurrentLocation();
+
+  const useCurrent = useCallback(async () => {
+    const address = await resolve();
+    if (address) navigation.goBack();
+    // İzin reddedilirse ekran locationPermission='denied' ile durumu gösterir.
+  }, [resolve, navigation]);
+
+  return (
+    <AddressPickerScreen
+      locationPermission={permission === 'denied' ? 'denied' : 'granted'}
+      locating={loading}
+      onUseCurrentLocation={useCurrent}
+      onClose={() => navigation.goBack()}
+      onSelect={() => navigation.goBack()}
+    />
+  );
 }
 
 export function TrackContainer() {
