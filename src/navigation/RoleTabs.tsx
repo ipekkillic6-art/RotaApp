@@ -12,17 +12,16 @@ import {
   HistoryContainer,
   NotificationsTabContainer,
 } from './containers/CustomerContainers';
+import { ProfileContainer } from './containers/SharedContainers';
 import {
   CourierHomeContainer,
   CourierTasksContainer,
   EarningsContainer,
-  PerformanceContainer,
 } from './containers/CourierContainers';
 import {
   OpsDashboardContainer,
   OpsDeliveriesContainer,
   OpsCouriersContainer,
-  OpsAnalyticsContainer,
 } from './containers/AdminContainers';
 
 const Customer = createBottomTabNavigator<CustomerTabParamList>();
@@ -40,7 +39,7 @@ export function CustomerTabs() {
       <Customer.Screen name="home" component={CustomerHomeContainer} />
       <Customer.Screen name="deliveries" component={HistoryContainer} />
       <Customer.Screen name="notifications" component={NotificationsTabContainer} />
-      <Customer.Screen name="profile" component={NotificationsTabContainer} />
+      <Customer.Screen name="profile" component={ProfileContainer} />
     </Customer.Navigator>
   );
 }
@@ -51,7 +50,7 @@ export function CourierTabs() {
       <Courier.Screen name="home" component={CourierHomeContainer} />
       <Courier.Screen name="tasks" component={CourierTasksContainer} />
       <Courier.Screen name="earnings" component={EarningsContainer} />
-      <Courier.Screen name="profile" component={PerformanceContainer} />
+      <Courier.Screen name="profile" component={ProfileContainer} />
     </Courier.Navigator>
   );
 }
@@ -62,7 +61,7 @@ export function AdminTabs() {
       <Admin.Screen name="dashboard" component={OpsDashboardContainer} />
       <Admin.Screen name="deliveries" component={OpsDeliveriesContainer} />
       <Admin.Screen name="couriers" component={OpsCouriersContainer} />
-      <Admin.Screen name="profile" component={OpsAnalyticsContainer} />
+      <Admin.Screen name="profile" component={ProfileContainer} />
     </Admin.Navigator>
   );
 }

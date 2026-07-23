@@ -5,6 +5,7 @@ import { SplashScreen } from '../../screens/shared/SplashScreen';
 import { OnboardingScreen } from '../../screens/shared/OnboardingScreen';
 import { LoginScreen, RegisterScreen } from '../../screens/shared/AuthScreens';
 import { RoleSelectScreen } from '../../screens/shared/RoleSelectScreen';
+import { ProfileScreen } from '../../screens/shared/ProfileScreen';
 import { useAuthStore } from '../../stores/authStore';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
@@ -61,4 +62,19 @@ export function RoleSelectContainer() {
   const setRole = useAuthStore((s) => s.setRole);
   // setRole rolü kalıcı yazar; RootNavigator o rolün tab'larına geçer.
   return <RoleSelectScreen onContinue={(role) => setRole(role)} />;
+}
+
+export function ProfileContainer() {
+  const user = useAuthStore((s) => s.user);
+  const role = useAuthStore((s) => s.role);
+  const logout = useAuthStore((s) => s.logout);
+  // Çıkışta oturum temizlenir; RootNavigator otomatik giriş akışına döner.
+  return (
+    <ProfileScreen
+      userName={user?.name ?? 'Misafir'}
+      email={user?.email}
+      role={role ?? 'customer'}
+      onLogout={logout}
+    />
+  );
 }
