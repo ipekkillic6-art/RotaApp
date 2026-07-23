@@ -73,6 +73,7 @@ export function RoleSelectContainer() {
 }
 
 export function ProfileContainer() {
+  const navigation = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const logout = useAuthStore((s) => s.logout);
@@ -82,6 +83,13 @@ export function ProfileContainer() {
       userName={user?.name ?? 'Misafir'}
       email={user?.email}
       role={role ?? 'customer'}
+      onSelectItem={(key) => {
+        if (key === 'addresses') navigation.navigate(ROUTES.ADDRESS_PICKER);
+        else if (key === 'notifications') navigation.navigate(ROUTES.NOTIFICATIONS);
+        else if (key === 'privacy')
+          Alert.alert('Gizlilik ve güvenlik', 'Hesap gizliliği ayarları yakında.', [{ text: 'Tamam' }]);
+        else Alert.alert('Yardım ve destek', 'destek@rota.app · 0850 000 00 00', [{ text: 'Tamam' }]);
+      }}
       onLogout={logout}
     />
   );

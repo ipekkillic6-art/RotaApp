@@ -15,20 +15,23 @@ import {
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import type { UserRole } from '../../types';
 
+export type ProfileMenuKey = 'addresses' | 'notifications' | 'privacy' | 'help';
+
 export interface ProfileScreenProps {
   userName: string;
   email?: string;
   role: UserRole;
+  onSelectItem?: (key: ProfileMenuKey) => void;
   onLogout?: () => void;
   loggingOut?: boolean;
 }
 
-const MENU = [
-  { icon: MapPin, label: 'Adreslerim' },
-  { icon: Bell, label: 'Bildirim ayarları' },
-  { icon: Shield, label: 'Gizlilik ve güvenlik' },
-  { icon: HelpCircle, label: 'Yardım ve destek' },
-] as const;
+const MENU: Array<{ key: ProfileMenuKey; icon: typeof MapPin; label: string }> = [
+  { key: 'addresses', icon: MapPin, label: 'Adreslerim' },
+  { key: 'notifications', icon: Bell, label: 'Bildirim ayarları' },
+  { key: 'privacy', icon: Shield, label: 'Gizlilik ve güvenlik' },
+  { key: 'help', icon: HelpCircle, label: 'Yardım ve destek' },
+];
 
 /**
  * Profil — her rolün "Profil" sekmesi.
@@ -36,7 +39,7 @@ const MENU = [
  * Kullanıcı kimliği + rol rozeti + ayar menüsü + çıkış. Çıkış authStore.logout'u
  * çağırır; oturum temizlenince RootNavigator otomatik olarak giriş akışına döner.
  */
-export function ProfileScreen({ userName, email, role, onLogout, loggingOut = false }: ProfileScreenProps) {
+export function ProfileScreen({ userName, email, role, onSelectItem, onLogout, loggingOut = false }: ProfileScreenProps) {
   const theme = useTheme();
   const meta = ROLE_META[role];
 
@@ -64,7 +67,7 @@ export function ProfileScreen({ userName, email, role, onLogout, loggingOut = fa
           {MENU.map((item, i) => (
             <Touchable
               key={item.label}
-              onPress={() => {}}
+              onPress={() => onSelectItem?.(item.key)}
               feedback="opacity"
               accessibilityLabel={item.label}
             >
