@@ -316,6 +316,7 @@ export function PickupScreen({
                     onPress={() => setCameraOpen(true)}
                     feedback="opacity"
                     accessibilityLabel="Yeniden çek"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Typography variant="caption" tone="accent" weight="semibold">
                       Yeniden çek
@@ -607,6 +608,7 @@ export function DeliveryVerificationScreen({
                     onPress={() => setCameraMode('photo')}
                     feedback="opacity"
                     accessibilityLabel="Yeniden çek"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Typography variant="caption" tone="accent" weight="semibold">
                       Yeniden çek

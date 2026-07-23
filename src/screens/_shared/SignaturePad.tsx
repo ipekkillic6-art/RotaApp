@@ -57,6 +57,9 @@ export function SignaturePad({ height = 180, onChange }: SignaturePadProps) {
     <View style={{ gap: theme.spacing.sm }}>
       <View
         {...responder.panHandlers}
+        accessible
+        accessibilityLabel="İmza alanı, parmağınızla imzalayın"
+        accessibilityHint="Ekrana çizerek alıcının imzasını alın"
         style={{
           height,
           borderRadius: theme.radius.md,
@@ -98,7 +101,12 @@ export function SignaturePad({ height = 180, onChange }: SignaturePadProps) {
         )}
       </View>
       {!isEmpty && (
-        <Touchable onPress={clear} feedback="opacity" accessibilityLabel="İmzayı temizle">
+        <Touchable
+          onPress={clear}
+          feedback="opacity"
+          accessibilityLabel="İmzayı temizle"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Typography variant="caption" tone="accent" weight="semibold">
             Temizle
           </Typography>
