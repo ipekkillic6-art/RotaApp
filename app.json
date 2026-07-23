@@ -9,7 +9,7 @@
     "backgroundColor": "#FFFFFF",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rota.app"
+      "bundleIdentifier": "com.tokgoz.rota"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.rota.app"
+      "package": "com.tokgoz.rota"
     },
     "web": {
       "favicon": "./assets/favicon.png"
