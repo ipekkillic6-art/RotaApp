@@ -36,6 +36,12 @@
         {
           "locationWhenInUsePermission": "Rota, teslimatını haritada takip edebilmen ve sana en yakın kuryeyi atayabilmek için konumunu kullanır."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Rota, paket alım/teslim fotoğrafı çekmen ve teslimat QR kodunu okutman için kamerayı kullanır."
+        }
       ]
     ]
   }
