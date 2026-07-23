@@ -1,6 +1,10 @@
 import { create } from 'zustand';
-import { deliveryService, type CreateDeliveryPayload } from '../services/deliveryService';
-import type { Delivery } from '../types';
+import {
+  deliveryService,
+  type CreateDeliveryPayload,
+  type QuotePayload,
+} from '../services/deliveryService';
+import type { Delivery, PriceBreakdown } from '../types';
 
 interface DeliveryState {
   active: Delivery[];
@@ -9,9 +13,16 @@ interface DeliveryState {
   loading: boolean;
   error?: string;
 
+  // Teslimat oluşturma — fiyat adımı
+  price: PriceBreakdown | null;
+  quoting: boolean;
+  quoteFailed: boolean;
+
   fetchActive: () => Promise<void>;
   fetchHistory: () => Promise<void>;
   fetchById: (id: string) => Promise<void>;
+  quote: (payload: QuotePayload) => Promise<void>;
+  resetQuote: () => void;
   create: (payload: CreateDeliveryPayload) => Promise<Delivery | null>;
   cancel: (id: string) => Promise<void>;
 }
@@ -22,6 +33,9 @@ export const useDeliveryStore = create<DeliveryState>((set) => ({
   current: null,
   loading: false,
   error: undefined,
+  price: null,
+  quoting: false,
+  quoteFailed: false,
 
   fetchActive: async () => {
     set({ loading: true, error: undefined });
@@ -49,6 +63,17 @@ export const useDeliveryStore = create<DeliveryState>((set) => ({
       set({ loading: false, error: e instanceof Error ? e.message : 'Teslimat yüklenemedi' });
     }
   },
+
+  quote: async (payload) => {
+    set({ quoting: true, quoteFailed: false });
+    try {
+      set({ price: await deliveryService.quote(payload), quoting: false });
+    } catch {
+      set({ quoting: false, quoteFailed: true });
+    }
+  },
+
+  resetQuote: () => set({ price: null, quoting: false, quoteFailed: false }),
 
   create: async (payload) => {
     set({ loading: true, error: undefined });
