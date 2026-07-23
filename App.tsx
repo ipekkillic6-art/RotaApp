@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -16,8 +16,9 @@ import { NavigationContainer } from '@react-navigation/native';
 
 import { ThemeProvider } from './src/design-system';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { useAuthStore } from './src/stores/authStore';
 
-// Fontlar (ileride oturum geri yükleme) bitene kadar splash açık kalsın.
+// Fontlar + oturum geri yükleme bitene kadar splash açık kalsın.
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
@@ -29,13 +30,21 @@ export default function App() {
     Inter_800ExtraBold,
   });
 
-  const onLayoutRootView = useCallback(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+  const restore = useAuthStore((s) => s.restore);
+  const restoring = useAuthStore((s) => s.restoring);
 
-  if (!fontsLoaded && !fontError) {
+  // Açılışta token'dan oturumu geri yükle.
+  useEffect(() => {
+    restore();
+  }, [restore]);
+
+  const ready = (fontsLoaded || Boolean(fontError)) && !restoring;
+
+  const onLayoutRootView = useCallback(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) {
     return null; // Splash görünmeye devam eder.
   }
 

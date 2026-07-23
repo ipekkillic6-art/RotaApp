@@ -5,8 +5,9 @@ import type { UserRole } from '../types';
 
 interface AuthState {
   user: AuthUser | null;
+  /** Aktif rol (RoleSelect'te seçilir, kalıcıdır). */
   role: UserRole | null;
-  /** Açılışta token okunana kadar true — splash bununla bekler. */
+  /** Açılışta token/rol okunana kadar true — splash bununla bekler. */
   restoring: boolean;
   loading: boolean;
   error?: string;
@@ -15,7 +16,7 @@ interface AuthState {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-  setRole: (role: UserRole) => void;
+  setRole: (role: UserRole) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -32,8 +33,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ restoring: false });
         return;
       }
-      const user = await storage.get<AuthUser>(STORAGE_KEYS.user);
-      set({ user, role: user?.role ?? null, restoring: false });
+      const [user, role] = await Promise.all([
+        storage.get<AuthUser>(STORAGE_KEYS.user),
+        storage.get<UserRole>(STORAGE_KEYS.role),
+      ]);
+      set({ user, role: role ?? null, restoring: false });
     } catch {
       set({ restoring: false });
     }
@@ -46,7 +50,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       await secure.set(STORAGE_KEYS.authToken, session.token);
       await secure.set(STORAGE_KEYS.refreshToken, session.refreshToken);
       await storage.set(STORAGE_KEYS.user, session.user);
-      set({ user: session.user, role: session.user.role, loading: false });
+      // Rol RoleSelect'te seçilir (demo üç rolü de gezebilsin).
+      set({ user: session.user, role: null, loading: false });
     } catch (e) {
       set({ loading: false, error: e instanceof Error ? e.message : 'Giriş başarısız' });
     }
@@ -59,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await secure.set(STORAGE_KEYS.authToken, session.token);
       await secure.set(STORAGE_KEYS.refreshToken, session.refreshToken);
       await storage.set(STORAGE_KEYS.user, session.user);
-      set({ user: session.user, role: session.user.role, loading: false });
+      set({ user: session.user, role: null, loading: false });
     } catch (e) {
       set({ loading: false, error: e instanceof Error ? e.message : 'Kayıt başarısız' });
     }
@@ -72,9 +77,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       await secure.remove(STORAGE_KEYS.authToken);
       await secure.remove(STORAGE_KEYS.refreshToken);
       await storage.remove(STORAGE_KEYS.user);
+      await storage.remove(STORAGE_KEYS.role);
       set({ user: null, role: null, error: undefined });
     }
   },
 
-  setRole: (role) => set({ role }),
+  setRole: async (role) => {
+    await storage.set(STORAGE_KEYS.role, role);
+    set({ role });
+  },
 }));

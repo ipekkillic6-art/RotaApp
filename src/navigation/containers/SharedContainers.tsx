@@ -5,18 +5,14 @@ import { SplashScreen } from '../../screens/shared/SplashScreen';
 import { OnboardingScreen } from '../../screens/shared/OnboardingScreen';
 import { LoginScreen, RegisterScreen } from '../../screens/shared/AuthScreens';
 import { RoleSelectScreen } from '../../screens/shared/RoleSelectScreen';
-import type { UserRole } from '../../types';
+import { useAuthStore } from '../../stores/authStore';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** Rol → o rolün tab host rotası. */
-const TABS_FOR: Record<UserRole, keyof RootStackParamList> = {
-  customer: ROUTES.CUSTOMER_TABS,
-  courier: ROUTES.COURIER_TABS,
-  admin: ROUTES.ADMIN_TABS,
-};
+// Mock modda kimlik bilgisi doğrulanmaz; ekran onSubmit'i argüman taşımıyor.
+const DEMO_CREDENTIALS = { email: 'demo@rota.app', password: 'demo1234' };
 
 export function SplashContainer() {
   return <SplashScreen />;
@@ -34,9 +30,15 @@ export function OnboardingContainer() {
 
 export function LoginContainer() {
   const navigation = useNavigation<Nav>();
+  const login = useAuthStore((s) => s.login);
+  const loading = useAuthStore((s) => s.loading);
+  const error = useAuthStore((s) => s.error);
+  // Başarıda RootNavigator koşullu olarak RoleSelect'e geçer — navigate gerekmez.
   return (
     <LoginScreen
-      onSubmit={() => navigation.navigate(ROUTES.ROLE_SELECT)}
+      loading={loading}
+      errorText={error}
+      onSubmit={() => login(DEMO_CREDENTIALS)}
       onRegister={() => navigation.navigate(ROUTES.REGISTER)}
     />
   );
@@ -44,21 +46,19 @@ export function LoginContainer() {
 
 export function RegisterContainer() {
   const navigation = useNavigation<Nav>();
+  const register = useAuthStore((s) => s.register);
+  const loading = useAuthStore((s) => s.loading);
   return (
     <RegisterScreen
+      loading={loading}
       onBack={() => navigation.goBack()}
-      onSubmit={() => navigation.navigate(ROUTES.ROLE_SELECT)}
+      onSubmit={() => register({ name: 'Deniz Aydın', ...DEMO_CREDENTIALS, role: 'customer' })}
     />
   );
 }
 
 export function RoleSelectContainer() {
-  const navigation = useNavigation<Nav>();
-  return (
-    <RoleSelectScreen
-      onContinue={(role: UserRole) =>
-        navigation.reset({ index: 0, routes: [{ name: TABS_FOR[role] }] })
-      }
-    />
-  );
+  const setRole = useAuthStore((s) => s.setRole);
+  // setRole rolü kalıcı yazar; RootNavigator o rolün tab'larına geçer.
+  return <RoleSelectScreen onContinue={(role) => setRole(role)} />;
 }

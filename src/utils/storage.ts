@@ -43,5 +43,6 @@ export const STORAGE_KEYS = {
   authToken: 'auth.token',
   refreshToken: 'auth.refreshToken',
   user: 'auth.user',
+  role: 'auth.role',
   courierOnline: 'courier.online',
 } as const;
