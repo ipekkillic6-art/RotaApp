@@ -51,7 +51,8 @@
         {
           "cameraPermission": "Rota, paket alım/teslim fotoğrafı çekmen ve teslimat QR kodunu okutman için kamerayı kullanır."
         }
-      ]
+      ],
+      "./plugins/withoutPushEntitlement.js"
     ]
   }
 }
