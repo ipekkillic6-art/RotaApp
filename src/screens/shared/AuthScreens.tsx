@@ -21,7 +21,7 @@ export interface LoginScreenProps {
   /** Server-side failure, shown above the form. */
   errorText?: string;
   loading?: boolean;
-  onSubmit?: () => void;
+  onSubmit?: (credentials: { identifier: string; password: string }) => void;
   onForgotPassword?: () => void;
   onRegister?: () => void;
 }
@@ -100,7 +100,12 @@ export function LoginScreen({
               />
             </View>
 
-            <Button label="Giriş yap" onPress={onSubmit} loading={loading} />
+            <Button
+              label="Giriş yap"
+              onPress={() => onSubmit?.({ identifier, password })}
+              loading={loading}
+              disabled={identifier.trim().length === 0 || password.length === 0}
+            />
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
               <View style={{ flex: 1 }}>
