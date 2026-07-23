@@ -12,10 +12,10 @@ import {
   Inter_800ExtraBold,
 } from '@expo-google-fonts/inter';
 
+import { NavigationContainer } from '@react-navigation/native';
+
 import { ThemeProvider } from './src/design-system';
-import { CustomerHomeScreen } from './src/screens/customer/CustomerHomeScreen';
-import { deliveries, deliveryHistory } from './src/mocks/deliveries';
-import { recentAddresses } from './src/mocks/addresses';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
 // Fontlar (ileride oturum geri yükleme) bitene kadar splash açık kalsın.
 SplashScreen.preventAutoHideAsync();
@@ -44,14 +44,9 @@ export default function App() {
       <SafeAreaProvider>
         <KeyboardProvider>
           <ThemeProvider preference="system">
-            {/* GEÇİCİ — Faz 3'te NavigationContainer gelecek */}
-            <CustomerHomeScreen
-              userName="Deniz Aydın"
-              activeDeliveries={[deliveries.onTheWay]}
-              recentAddresses={recentAddresses}
-              pastDeliveries={deliveryHistory}
-              unreadNotifications={3}
-            />
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
           </ThemeProvider>
         </KeyboardProvider>
       </SafeAreaProvider>

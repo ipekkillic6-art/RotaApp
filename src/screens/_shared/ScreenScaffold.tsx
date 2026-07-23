@@ -13,7 +13,6 @@ import {
   Wallet,
 } from 'lucide-react-native';
 import {
-  BottomTabBar,
   OfflineBanner,
   SafeAreaContainer,
   ScreenContainer,
@@ -104,15 +103,9 @@ export function ScreenScaffold({
           </View>
         )}
       </SafeAreaContainer>
-
-      {showTabs && (
-        <BottomTabBar
-          tabs={ROLE_TABS[role]}
-          activeKey={activeTab}
-          onChange={onTabChange ?? (() => {})}
-          accentColor={theme.colors.role[role]}
-        />
-      )}
+      {/* Tab bar'ı artık navigator çiziyor (bkz. src/navigation/RoleTabBar).
+          Scaffold sadece safe area + canvas + offline + header + footer.
+          `activeTab` yalnızca alt kenar boşluğunu (tab alanı) ayarlamak için. */}
     </ScreenContainer>
   );
 }
