@@ -81,7 +81,7 @@ export function makeDelivery(overrides: DeliveryOverrides = {}): Delivery {
     id: `dlv-${seq}`,
     trackingNumber: nextTracking(),
     customerId: 'cus-01',
-    customerName: 'Deniz Aydın',
+    customerName: 'İpek Kılıç',
     pickupAddress: addresses.officeLevent,
     dropoffAddress: addresses.homeKadikoy,
     packageType: 'small',

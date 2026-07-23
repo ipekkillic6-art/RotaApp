@@ -53,7 +53,7 @@ export function RegisterContainer() {
     <RegisterScreen
       loading={loading}
       onBack={() => navigation.goBack()}
-      onSubmit={() => register({ name: 'Deniz Aydın', ...DEMO_CREDENTIALS, role: 'customer' })}
+      onSubmit={() => register({ name: 'İpek Kılıç', ...DEMO_CREDENTIALS, role: 'customer' })}
     />
   );
 }

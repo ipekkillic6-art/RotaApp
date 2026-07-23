@@ -29,7 +29,7 @@ export interface RegisterPayload {
 const MOCK_SESSION: AuthSession = {
   token: 'mock-access-token',
   refreshToken: 'mock-refresh-token',
-  user: { id: 'u1', name: 'Deniz Aydın', email: 'deniz@rota.app', role: 'customer' },
+  user: { id: 'u1', name: 'İpek Kılıç', email: 'ipek@rota.app', role: 'customer' },
 };
 
 export const authService = {

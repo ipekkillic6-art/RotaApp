@@ -156,7 +156,7 @@ export function CreateDeliveryScreen({
                 <Typography variant="micro" tone="muted" overline>
                   Gönderici
                 </Typography>
-                <TextField label="Ad soyad" value="Deniz Aydın" onChangeText={() => {}} icon={User} />
+                <TextField label="Ad soyad" value="İpek Kılıç" onChangeText={() => {}} icon={User} />
                 <PhoneField label="Telefon" value={senderPhone} onChangeText={setSenderPhone} required />
               </Surface>
               <Surface tone="elevated" radius="lg" padding="lg" bordered style={{ gap: theme.spacing.md }}>

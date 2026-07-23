@@ -15,7 +15,7 @@ export const addresses = {
     district: 'Şişli',
     latitude: 41.0766,
     longitude: 29.0116,
-    contactName: 'Deniz Aydın',
+    contactName: 'İpek Kılıç',
     contactPhone: '+90 532 114 22 07',
     note: 'Resepsiyona bırakabilirsiniz.',
   },
