@@ -37,6 +37,7 @@ import {
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import { CameraCaptureModal } from '../_shared/CameraCaptureModal';
+import { SignaturePad } from '../_shared/SignaturePad';
 import { formatDistance, formatDuration } from '../../utils/format';
 import type { Delivery, FailureReason } from '../../types';
 import { FAILURE_REASONS } from '../../design-system/domain/delivery/status';
@@ -493,6 +494,8 @@ export function DeliveryVerificationScreen({
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [cameraMode, setCameraMode] = useState<'photo' | 'qr' | null>(null);
+  const [signerName, setSignerName] = useState('');
+  const [hasSignature, setHasSignature] = useState(false);
 
   return (
     <ScreenScaffold
@@ -513,7 +516,10 @@ export function DeliveryVerificationScreen({
             icon={PackageCheck}
             onPress={onConfirm}
             loading={submitting}
-            disabled={method === 'code' && code.length < (task.deliveryCode?.length ?? 4)}
+            disabled={
+              (method === 'code' && code.length < (task.deliveryCode?.length ?? 4)) ||
+              (method === 'signature' && (!hasSignature || signerName.trim().length === 0))
+            }
           />
           <Button label="Teslim edilemedi" variant="tertiary" onPress={onFail} />
         </View>
@@ -638,26 +644,12 @@ export function DeliveryVerificationScreen({
           {method === 'signature' && (
             <Surface tone="elevated" radius="lg" padding="lg" bordered style={{ gap: theme.spacing.md }}>
               <Typography variant="h3">Alıcı imzası</Typography>
-              <View
-                style={{
-                  height: 160,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: theme.colors.background.secondary,
-                  borderWidth: theme.borderWidth.hairline,
-                  borderColor: theme.colors.border.default,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography variant="micro" tone="muted">
-                  İmza alanı — parmakla imzalayın
-                </Typography>
-              </View>
+              <SignaturePad height={180} onChange={setHasSignature} />
               <TextField
                 label="Alıcı adı"
                 placeholder="Teslim alan kişinin adı"
-                value=""
-                onChangeText={() => {}}
+                value={signerName}
+                onChangeText={setSignerName}
               />
             </Surface>
           )}
