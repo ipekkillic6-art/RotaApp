@@ -3,10 +3,10 @@
  *
  * Nothing outside `tokens/colors.ts` may import from here. Components and
  * screens speak semantic tokens (`theme.colors.text.primary`,
- * `theme.colors.status.onTheWay`), never `palette.teal[600]`.
+ * `theme.colors.status.onTheWay`), never `palette.blue[600]`.
  *
  * Ramps are tuned for a delivery/ops product:
- * - `teal`   brand ("Rota") — trust + motion, deliberately NOT the delivery
+ * - `blue`   brand ("Rota") — trust + motion, deliberately NOT the delivery
  *            cliché of grass-green or hi-vis orange.
  * - `slate`  the workhorse neutral. Slightly cool so dense operational data
  *            reads calm rather than muddy.
@@ -15,18 +15,18 @@
  */
 
 export const palette = {
-  /* ── Brand: Rota Teal ─────────────────────────────────────────────── */
-  teal: {
-    50: '#E6FAF8',
-    100: '#C2F2EC',
-    200: '#8FE5DB',
-    300: '#55D2C6',
-    400: '#22B6AA',
-    500: '#0E9A8F',
-    600: '#0A7D74',
-    700: '#0B635C',
-    800: '#0D4F4A',
-    900: '#0E403D',
+  /* ── Brand: Rota Açık Mavi (sky) ──────────────────────────────────── */
+  blue: {
+    50: '#F0F9FF',
+    100: '#E0F2FE',
+    200: '#BAE6FD',
+    300: '#7DD3FC',
+    400: '#38BDF8',
+    500: '#0EA5E9',
+    600: '#0284C7',
+    700: '#0369A1',
+    800: '#075985',
+    900: '#0C4A6E',
   },
 
   /* ── Neutral: cool slate ──────────────────────────────────────────── */
