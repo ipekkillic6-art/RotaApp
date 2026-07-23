@@ -16,6 +16,7 @@ import { EarningsScreen, CourierPerformanceScreen } from '../../screens/courier/
 
 import { useCourierStore } from '../../stores/courierStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { useCourierLocationTracking } from '../../hooks/useCourierLocationTracking';
 import { deliveries, courierOffers } from '../../mocks/deliveries';
 import { couriers } from '../../mocks/couriers';
 import {
@@ -45,6 +46,9 @@ export function CourierHomeContainer() {
   const fetchOffers = useCourierStore((s) => s.fetchOffers);
   const fetchActiveTask = useCourierStore((s) => s.fetchActiveTask);
   const { online: netOnline } = useNetworkStatus();
+
+  // Pil dostu konum takibi: yalnızca çevrimiçi + aktif teslimat varken.
+  useCourierLocationTracking(online && !!activeTask);
 
   useEffect(() => {
     restoreOnline();
