@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { courierService } from '../services/courierService';
+import { useQueueStore } from './queueStore';
 import { storage, STORAGE_KEYS } from '../utils/storage';
 import type { Courier, Delivery, DeliveryStatus } from '../types';
 
@@ -73,10 +74,8 @@ export const useCourierStore = create<CourierState>((set) => ({
 
   updateStatus: async (id, status) => {
     set({ error: undefined });
-    try {
-      await courierService.updateStatus(id, status);
-    } catch (e) {
-      set({ error: e instanceof Error ? e.message : 'Durum güncellenemedi' });
-    }
+    // Kuyruk üzerinden: çevrimiçiyse hemen gönderilir, değilse sıraya alınır
+    // (sinyalsiz bodrumda tamamlanan teslimat kaybolmaz).
+    await useQueueStore.getState().submit(id, status);
   },
 }));

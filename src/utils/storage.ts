@@ -45,4 +45,5 @@ export const STORAGE_KEYS = {
   user: 'auth.user',
   role: 'auth.role',
   courierOnline: 'courier.online',
+  offlineQueue: 'queue.statusUpdates',
 } as const;

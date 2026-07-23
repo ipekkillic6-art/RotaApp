@@ -19,6 +19,7 @@ import {
   useTheme,
   type TabItem,
 } from '../../design-system';
+import { useQueueStore } from '../../stores/queueStore';
 import type { UserRole } from '../../types';
 
 /**
@@ -79,11 +80,13 @@ export function ScreenScaffold({
 }: ScreenScaffoldProps) {
   const theme = useTheme();
   const showTabs = !!activeTab;
+  const queuedCount = useQueueStore((s) => s.count);
+  const flushQueue = useQueueStore((s) => s.flush);
 
   return (
     <ScreenContainer tone={tone} style={style}>
       <SafeAreaContainer edges={showTabs ? ['top'] : ['top', 'bottom']}>
-        {offline && <OfflineBanner queuedCount={2} onRetry={() => {}} />}
+        {offline && <OfflineBanner queuedCount={queuedCount} onRetry={flushQueue} />}
         {header}
         <View style={{ flex: 1 }}>{children}</View>
 

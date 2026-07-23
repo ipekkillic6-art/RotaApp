@@ -17,6 +17,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { ThemeProvider } from './src/design-system';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/stores/authStore';
+import { useQueueStore } from './src/stores/queueStore';
 
 // Fontlar + oturum geri yükleme bitene kadar splash açık kalsın.
 SplashScreen.preventAutoHideAsync();
@@ -33,9 +34,10 @@ export default function App() {
   const restore = useAuthStore((s) => s.restore);
   const restoring = useAuthStore((s) => s.restoring);
 
-  // Açılışta token'dan oturumu geri yükle.
+  // Açılışta token'dan oturumu geri yükle + çevrimdışı kuyruğu başlat.
   useEffect(() => {
     restore();
+    useQueueStore.getState().init();
   }, [restore]);
 
   const ready = (fontsLoaded || Boolean(fontError)) && !restoring;
