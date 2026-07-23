@@ -127,11 +127,18 @@ export function LoginScreen({
   );
 }
 
+export interface RegisterValues {
+  fullName: string;
+  phone: string;
+  email: string;
+  password: string;
+}
+
 export interface RegisterScreenProps {
   /** Field-level errors keyed by field name. */
   errors?: Partial<Record<'fullName' | 'phone' | 'email' | 'password' | 'terms', string>>;
   loading?: boolean;
-  onSubmit?: () => void;
+  onSubmit?: (values: RegisterValues) => void;
   onBack?: () => void;
 }
 
@@ -202,7 +209,17 @@ export function RegisterScreen({ errors, loading, onSubmit, onBack }: RegisterSc
               )}
             </View>
 
-            <Button label="Hesabı oluştur" onPress={onSubmit} loading={loading} />
+            <Button
+              label="Hesabı oluştur"
+              onPress={() => onSubmit?.({ fullName, phone, email, password })}
+              loading={loading}
+              disabled={
+                fullName.trim().length === 0 ||
+                email.trim().length === 0 ||
+                password.length === 0 ||
+                !terms
+              }
+            />
           </View>
         </ScrollContainer>
       </SafeAreaContainer>

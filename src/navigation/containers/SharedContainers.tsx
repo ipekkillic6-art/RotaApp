@@ -13,9 +13,6 @@ import { ROUTES } from '../routes';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-// Mock modda kimlik bilgisi doğrulanmaz; ekran onSubmit'i argüman taşımıyor.
-const DEMO_CREDENTIALS = { email: 'demo@rota.app', password: 'demo1234' };
-
 export function SplashContainer() {
   return <SplashScreen />;
 }
@@ -61,7 +58,9 @@ export function RegisterContainer() {
     <RegisterScreen
       loading={loading}
       onBack={() => navigation.goBack()}
-      onSubmit={() => register({ name: 'İpek Kılıç', ...DEMO_CREDENTIALS, role: 'customer' })}
+      onSubmit={({ fullName, email, password }) =>
+        register({ name: fullName.trim(), email: email.trim(), password, role: 'customer' })
+      }
     />
   );
 }
