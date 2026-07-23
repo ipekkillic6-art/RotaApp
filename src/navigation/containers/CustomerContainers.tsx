@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -40,6 +40,7 @@ export function CustomerHomeContainer() {
   const fetchNotifications = useNotificationStore((s) => s.fetch);
   const role = useAuthStore((s) => s.role);
   const { online } = useNetworkStatus();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchActive();
@@ -47,10 +48,11 @@ export function CustomerHomeContainer() {
     fetchNotifications(role ?? 'customer');
   }, [fetchActive, fetchHistory, fetchNotifications, role]);
 
-  const refresh = () => {
-    fetchActive();
-    fetchHistory();
-  };
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchActive(), fetchHistory()]);
+    setRefreshing(false);
+  }, [fetchActive, fetchHistory]);
 
   return (
     <CustomerHomeScreen
@@ -62,6 +64,8 @@ export function CustomerHomeContainer() {
       loading={loading && active.length === 0}
       errorText={error}
       offline={!online}
+      refreshing={refreshing}
+      onRefresh={refresh}
       onRetry={refresh}
       onCreateDelivery={() => navigation.navigate(ROUTES.CREATE, { step: 'pickup' })}
       onOpenDelivery={(d) =>
@@ -162,9 +166,16 @@ export function HistoryContainer() {
   const loading = useDeliveryStore((s) => s.loading);
   const error = useDeliveryStore((s) => s.error);
   const fetchHistory = useDeliveryStore((s) => s.fetchHistory);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchHistory();
+  }, [fetchHistory]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchHistory();
+    setRefreshing(false);
   }, [fetchHistory]);
 
   return (
@@ -172,6 +183,8 @@ export function HistoryContainer() {
       deliveries={history}
       loading={loading && history.length === 0}
       errorText={error}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       onOpenDelivery={(d) => navigation.navigate(ROUTES.DELIVERY_DETAIL, { deliveryId: keyFor(d) })}
     />
   );

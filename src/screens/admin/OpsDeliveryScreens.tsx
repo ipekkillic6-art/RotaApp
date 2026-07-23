@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Ban, MessageSquarePlus, SlidersHorizontal, UserCog } from 'lucide-react-native';
 import {
   ActionSheet,
@@ -37,6 +38,9 @@ export interface OpsDeliveryListScreenProps {
   filtersOpen?: boolean;
   /** Renders the no-results state. */
   emptyQuery?: string;
+  /** Pull-to-refresh. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
   onOpenDelivery?: (delivery: Delivery) => void;
   onTabChange?: (key: string) => void;
 }
@@ -46,6 +50,8 @@ export function OpsDeliveryListScreen({
   loading = false,
   filtersOpen = false,
   emptyQuery,
+  refreshing = false,
+  onRefresh,
   onOpenDelivery,
   onTabChange,
 }: OpsDeliveryListScreenProps) {
@@ -134,11 +140,32 @@ export function OpsDeliveryListScreen({
         onTabChange={onTabChange}
         tone="sunken"
       >
-        <ScrollContainer bottomInset={theme.chrome.tabBar}>
-          <View style={{ gap: theme.layout.listGap, paddingTop: theme.spacing.md }}>
-            {loading ? (
+        {loading ? (
+          <ScrollContainer bottomInset={theme.chrome.tabBar}>
+            <View style={{ paddingTop: theme.spacing.md }}>
               <SkeletonList count={4} />
-            ) : list.length === 0 ? (
+            </View>
+          </ScrollContainer>
+        ) : (
+          <FlashList
+            data={list}
+            keyExtractor={(item, i) => item.id + i}
+            renderItem={({ item }) => (
+              <DeliveryCard
+                delivery={item}
+                variant="admin"
+                onPress={() => onOpenDelivery?.(item)}
+              />
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: theme.layout.listGap }} />}
+            contentContainerStyle={{
+              paddingHorizontal: theme.layout.screenPaddingX,
+              paddingTop: theme.spacing.md,
+              paddingBottom: theme.chrome.tabBar,
+            }}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            ListEmptyComponent={
               <StateView
                 {...(query ? STATE_PRESETS.noSearchResults : STATE_PRESETS.noFilterResults)}
                 secondaryAction={{
@@ -151,18 +178,9 @@ export function OpsDeliveryListScreen({
                   },
                 }}
               />
-            ) : (
-              list.map((delivery, i) => (
-                <DeliveryCard
-                  key={delivery.id + i}
-                  delivery={delivery}
-                  variant="admin"
-                  onPress={() => onOpenDelivery?.(delivery)}
-                />
-              ))
-            )}
-          </View>
-        </ScrollContainer>
+            }
+          />
+        )}
       </ScreenScaffold>
 
       <BottomSheet

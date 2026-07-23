@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { RefreshControl, View } from 'react-native';
 import { Bell, ChevronRight, Percent, Plus } from 'lucide-react-native';
 import {
   AddressCard,
@@ -29,6 +29,9 @@ export interface CustomerHomeScreenProps {
   loading?: boolean;
   errorText?: string;
   offline?: boolean;
+  /** Pull-to-refresh. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
   onCreateDelivery?: () => void;
   onOpenDelivery?: (delivery: Delivery) => void;
   onOpenNotifications?: () => void;
@@ -53,6 +56,8 @@ export function CustomerHomeScreen({
   loading = false,
   errorText,
   offline = false,
+  refreshing = false,
+  onRefresh,
   onCreateDelivery,
   onOpenDelivery,
   onOpenNotifications,
@@ -97,7 +102,18 @@ export function CustomerHomeScreen({
       offline={offline}
       tone="sunken"
     >
-      <ScrollContainer bottomInset={theme.chrome.tabBar}>
+      <ScrollContainer
+        bottomInset={theme.chrome.tabBar}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.role.customer}
+            />
+          ) : undefined
+        }
+      >
         {errorText ? (
           <StateView
             {...STATE_PRESETS.serverError}

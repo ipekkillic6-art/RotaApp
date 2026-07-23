@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -52,15 +52,24 @@ export function OpsDeliveriesContainer() {
   const list = useOpsStore((s) => s.deliveries);
   const loading = useOpsStore((s) => s.loading);
   const fetchDeliveries = useOpsStore((s) => s.fetchDeliveries);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchDeliveries();
+  }, [fetchDeliveries]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchDeliveries();
+    setRefreshing(false);
   }, [fetchDeliveries]);
 
   return (
     <OpsDeliveryListScreen
       deliveries={list}
       loading={loading && list.length === 0}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       onOpenDelivery={(d) => navigation.navigate(ROUTES.OPS_DELIVERY_DETAIL, { deliveryId: keyFor(d) })}
     />
   );

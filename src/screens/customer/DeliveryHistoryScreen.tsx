@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SlidersHorizontal } from 'lucide-react-native';
 import {
   AppHeader,
@@ -38,6 +39,9 @@ export interface DeliveryHistoryScreenProps {
   filter?: HistoryFilter;
   loading?: boolean;
   errorText?: string;
+  /** Pull-to-refresh. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
   onOpenDelivery?: (delivery: Delivery) => void;
   onOpenFilters?: () => void;
   onTabChange?: (key: string) => void;
@@ -49,6 +53,8 @@ export function DeliveryHistoryScreen({
   filter: initialFilter = 'all',
   loading = false,
   errorText,
+  refreshing = false,
+  onRefresh,
   onOpenDelivery,
   onOpenFilters,
   onTabChange,
@@ -135,35 +141,49 @@ export function DeliveryHistoryScreen({
       onTabChange={onTabChange}
       tone="sunken"
     >
-      <ScrollContainer bottomInset={theme.chrome.tabBar}>
-        <View style={{ gap: theme.layout.listGap, paddingTop: theme.spacing.md }}>
-          {errorText ? (
-            <StateView
-              {...STATE_PRESETS.serverError}
-              description={errorText}
-              primaryAction={{ label: 'Tekrar dene', onPress: () => {} }}
-            />
-          ) : loading ? (
+      {loading ? (
+        <ScrollContainer bottomInset={theme.chrome.tabBar}>
+          <View style={{ paddingTop: theme.spacing.md }}>
             <SkeletonList count={4} />
-          ) : list.length === 0 ? (
-            <StateView
-              {...(query ? STATE_PRESETS.noSearchResults : STATE_PRESETS.noHistory)}
-              secondaryAction={
-                query ? { label: 'Aramayı temizle', onPress: () => setQuery('') } : undefined
-              }
+          </View>
+        </ScrollContainer>
+      ) : (
+        <FlashList
+          data={list}
+          keyExtractor={(item, i) => item.id + i}
+          renderItem={({ item }) => (
+            <DeliveryCard
+              delivery={item}
+              variant="customer"
+              onPress={() => onOpenDelivery?.(item)}
             />
-          ) : (
-            list.map((delivery, i) => (
-              <DeliveryCard
-                key={delivery.id + i}
-                delivery={delivery}
-                variant="customer"
-                onPress={() => onOpenDelivery?.(delivery)}
-              />
-            ))
           )}
-        </View>
-      </ScrollContainer>
+          ItemSeparatorComponent={() => <View style={{ height: theme.layout.listGap }} />}
+          contentContainerStyle={{
+            paddingHorizontal: theme.layout.screenPaddingX,
+            paddingTop: theme.spacing.md,
+            paddingBottom: theme.chrome.tabBar,
+          }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListEmptyComponent={
+            errorText ? (
+              <StateView
+                {...STATE_PRESETS.serverError}
+                description={errorText}
+                primaryAction={onRefresh ? { label: 'Tekrar dene', onPress: onRefresh } : undefined}
+              />
+            ) : (
+              <StateView
+                {...(query ? STATE_PRESETS.noSearchResults : STATE_PRESETS.noHistory)}
+                secondaryAction={
+                  query ? { label: 'Aramayı temizle', onPress: () => setQuery('') } : undefined
+                }
+              />
+            )
+          }
+        />
+      )}
     </ScreenScaffold>
 
       <BottomSheet
