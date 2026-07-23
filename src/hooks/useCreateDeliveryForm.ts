@@ -2,35 +2,16 @@ import { useCallback, useMemo } from 'react';
 import { create as createStore } from 'zustand';
 import { useDeliveryStore } from '../stores/deliveryStore';
 import { savedAddresses } from '../mocks/addresses';
+import {
+  INITIAL_FORM,
+  canProceedForStep,
+  type CreateDeliveryForm,
+} from '../utils/createDeliveryValidation';
 import type { CreateDeliveryPayload } from '../services/deliveryService';
-import type { Address, Delivery, PackageTypeId } from '../types';
+import type { Address, Delivery } from '../types';
 import type { CreateStepKey } from '../screens/customer/CreateDeliveryScreen';
 
-/**
- * Teslimat oluşturma formunun TÜM verisi, doğrulaması ve "sonraki adıma
- * geçebilir mi" kararı burada — ekran saf/kontrollü kalır (roadmap 5.2).
- */
-export interface CreateDeliveryForm {
-  pickupAddressId: string | null;
-  dropoffAddressId: string | null;
-  packageType: PackageTypeId;
-  packageNote: string;
-  senderPhone: string;
-  recipientName: string;
-  recipientPhone: string;
-  timing: 'now' | 'scheduled';
-}
-
-const INITIAL: CreateDeliveryForm = {
-  pickupAddressId: null,
-  dropoffAddressId: null,
-  packageType: 'small',
-  packageNote: '',
-  senderPhone: '532 114 22 07',
-  recipientName: '',
-  recipientPhone: '',
-  timing: 'now',
-};
+export type { CreateDeliveryForm };
 
 /**
  * Form state modül seviyesi store'da — adımlar arası `navigation.replace`
@@ -42,9 +23,9 @@ interface CreateFormState {
   reset: () => void;
 }
 const useCreateFormStore = createStore<CreateFormState>((set) => ({
-  form: INITIAL,
+  form: INITIAL_FORM,
   update: (patch) => set((s) => ({ form: { ...s.form, ...patch } })),
-  reset: () => set({ form: INITIAL }),
+  reset: () => set({ form: INITIAL_FORM }),
 }));
 
 export function useCreateDeliveryForm() {
@@ -64,29 +45,9 @@ export function useCreateDeliveryForm() {
     [],
   );
 
-  /** Adım geçerli mi — "Devam et" bu false iken pasif. */
+  /** Adım geçerli mi — saf doğrulama modülünü kullanır. */
   const canProceed = useCallback(
-    (step: CreateStepKey): boolean => {
-      switch (step) {
-        case 'pickup':
-          return !!form.pickupAddressId;
-        case 'dropoff':
-          return !!form.dropoffAddressId && form.dropoffAddressId !== form.pickupAddressId;
-        case 'contacts':
-          return (
-            form.recipientName.trim().length > 0 &&
-            form.recipientPhone.trim().length > 0 &&
-            form.senderPhone.trim().length > 0
-          );
-        case 'price':
-          return !quoting && !quoteFailed;
-        case 'package':
-        case 'schedule':
-        case 'confirm':
-        default:
-          return true;
-      }
-    },
+    (step: CreateStepKey): boolean => canProceedForStep(step, form, { quoting, quoteFailed }),
     [form, quoting, quoteFailed],
   );
 

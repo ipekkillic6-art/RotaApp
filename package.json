@@ -49,7 +49,7 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "lint:guard": "eslint . --config eslint.config.guard.js --max-warnings=0",
-    "test": "node --test"
+    "test": "node --test 'src/**/*.test.ts'"
   },
   "private": true
 }
