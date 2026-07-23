@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Maximize2, Navigation } from 'lucide-react-native';
 import { useTheme, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
@@ -21,26 +22,28 @@ export interface MapPreviewProps {
   style?: StyleProp<ViewStyle>;
 }
 
+// Demo koordinatları (İstanbul). Gerçek teslimatta prop'la geçilecek.
+const PICKUP = { latitude: 41.0602, longitude: 28.9877 }; // Şişli
+const DROPOFF = { latitude: 40.9903, longitude: 29.027 }; // Kadıköy
+const COURIER = { latitude: 41.025, longitude: 29.007 };
+const REGION = {
+  latitude: (PICKUP.latitude + DROPOFF.latitude) / 2,
+  longitude: (PICKUP.longitude + DROPOFF.longitude) / 2,
+  latitudeDelta: 0.11,
+  longitudeDelta: 0.11,
+};
+
 const makeStyles = (theme: Theme) =>
   StyleSheet.create({
     root: { overflow: 'hidden', justifyContent: 'flex-end' },
-    road: { position: 'absolute', backgroundColor: theme.colors.map.road },
-    route: {
-      position: 'absolute',
-      height: 4,
-      borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.map.route,
-    },
     pin: {
-      position: 'absolute',
-      width: 14,
-      height: 14,
+      width: 16,
+      height: 16,
       borderRadius: theme.radius.full,
       borderWidth: 3,
       borderColor: theme.colors.background.elevated,
     },
     courier: {
-      position: 'absolute',
       width: 30,
       height: 30,
       borderRadius: theme.radius.full,
@@ -77,12 +80,12 @@ const makeStyles = (theme: Theme) =>
   });
 
 /**
- * Map placeholder.
+ * Harita önizlemesi.
  *
- * No map SDK is added at this stage — that is a real dependency with keys,
- * billing and native config, and it would block the design work. This draws a
- * schematic route so every screen that will host a map is laid out, measured
- * and reviewable now; swapping in MapView later changes this file only.
+ * iOS'ta Apple Maps (anahtar gerektirmez), Android'de Google Maps. Prop
+ * arayüzü tasarım aşamasındaki placeholder ile AYNI — bu yüzden haritayı
+ * kullanan ekranların hiçbiri değişmedi. Önizleme olduğu için kaydırma/zoom
+ * kapalı; `onPress` tam ekran haritayı açar.
  */
 export function MapPreview({
   height = 180,
@@ -96,6 +99,7 @@ export function MapPreview({
 }: MapPreviewProps) {
   const theme = useTheme();
   const styles = makeStyles(theme);
+  const interactive = !onPress; // onPress varsa dokunuşu Touchable alsın.
 
   const body = (
     <View
@@ -132,43 +136,36 @@ export function MapPreview({
         </View>
       ) : (
         <>
-          {/* Schematic street grid. */}
-          <View style={[styles.road, { left: 0, right: 0, top: height * 0.32, height: 8 }]} />
-          <View style={[styles.road, { left: 0, right: 0, top: height * 0.72, height: 6 }]} />
-          <View style={[styles.road, { top: 0, bottom: 0, left: '26%', width: 7 }]} />
-          <View style={[styles.road, { top: 0, bottom: 0, left: '68%', width: 5 }]} />
-
-          {/* Route. */}
-          <View style={[styles.route, { left: '18%', width: '52%', top: height * 0.35 }]} />
-          <View
-            style={[
-              styles.route,
-              { left: '66%', width: 4, top: height * 0.35, height: height * 0.38 },
-            ]}
-          />
-
-          <View
-            style={[
-              styles.pin,
-              { left: '16%', top: height * 0.32, backgroundColor: theme.colors.map.marker },
-            ]}
-          />
-          <View
-            style={[
-              styles.pin,
-              {
-                left: '66%',
-                top: height * 0.71,
-                backgroundColor: theme.colors.feedback.success,
-              },
-            ]}
-          />
-
-          {showCourier && (
-            <View style={[styles.courier, { left: '44%', top: height * 0.29 }]}>
-              <Icon icon={Navigation} size={16} color={theme.colors.text.inverse} strokeWidth={2.5} />
-            </View>
-          )}
+          <View style={StyleSheet.absoluteFill} pointerEvents={interactive ? 'auto' : 'none'}>
+            <MapView
+              style={StyleSheet.absoluteFill}
+              initialRegion={REGION}
+              scrollEnabled={interactive}
+              zoomEnabled={interactive}
+              rotateEnabled={false}
+              pitchEnabled={false}
+              toolbarEnabled={false}
+            >
+              <Polyline
+                coordinates={showCourier ? [PICKUP, COURIER, DROPOFF] : [PICKUP, DROPOFF]}
+                strokeColor={theme.colors.map.route}
+                strokeWidth={4}
+              />
+              <Marker coordinate={PICKUP} anchor={{ x: 0.5, y: 0.5 }}>
+                <View style={[styles.pin, { backgroundColor: theme.colors.map.marker }]} />
+              </Marker>
+              <Marker coordinate={DROPOFF} anchor={{ x: 0.5, y: 0.5 }}>
+                <View style={[styles.pin, { backgroundColor: theme.colors.feedback.success }]} />
+              </Marker>
+              {showCourier && (
+                <Marker coordinate={COURIER} anchor={{ x: 0.5, y: 0.5 }}>
+                  <View style={styles.courier}>
+                    <Icon icon={Navigation} size={16} color={theme.colors.text.inverse} strokeWidth={2.5} />
+                  </View>
+                </Marker>
+              )}
+            </MapView>
+          </View>
 
           {onPress && (
             <View style={styles.expand}>
