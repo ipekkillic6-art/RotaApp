@@ -1,26 +1,57 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { create as createStore } from 'zustand';
 import { useDeliveryStore } from '../stores/deliveryStore';
-import { recentAddresses } from '../mocks/addresses';
+import { savedAddresses } from '../mocks/addresses';
 import type { CreateDeliveryPayload } from '../services/deliveryService';
-import type { Delivery } from '../types';
+import type { Address, Delivery, PackageTypeId } from '../types';
+import type { CreateStepKey } from '../screens/customer/CreateDeliveryScreen';
 
 /**
- * Teslimat oluşturma akışının orkestrasyonu.
- *
- * Not: Alan girişleri (adres, paket, telefon) şimdilik CreateDeliveryScreen'in
- * içinde tutuluyor; bu hook async adımları (fiyat sorgusu + oluşturma) ve
- * durumlarını (loading/error) sahiplenir. Ekran form state'i dışarı açıldığında
- * (ileride) tüm alanlar buraya taşınır.
+ * Teslimat oluşturma formunun TÜM verisi, doğrulaması ve "sonraki adıma
+ * geçebilir mi" kararı burada — ekran saf/kontrollü kalır (roadmap 5.2).
  */
-const SAMPLE_PAYLOAD: CreateDeliveryPayload = {
-  pickupAddress: recentAddresses[0],
-  dropoffAddress: recentAddresses[1] ?? recentAddresses[0],
+export interface CreateDeliveryForm {
+  pickupAddressId: string | null;
+  dropoffAddressId: string | null;
+  packageType: PackageTypeId;
+  packageNote: string;
+  senderPhone: string;
+  recipientName: string;
+  recipientPhone: string;
+  timing: 'now' | 'scheduled';
+}
+
+const INITIAL: CreateDeliveryForm = {
+  pickupAddressId: null,
+  dropoffAddressId: null,
   packageType: 'small',
+  packageNote: '',
+  senderPhone: '532 114 22 07',
+  recipientName: '',
+  recipientPhone: '',
+  timing: 'now',
 };
 
+/**
+ * Form state modül seviyesi store'da — adımlar arası `navigation.replace`
+ * ekranı yeniden mount ettiğinde veri KAYBOLMASIN diye (useState olmaz).
+ */
+interface CreateFormState {
+  form: CreateDeliveryForm;
+  update: (patch: Partial<CreateDeliveryForm>) => void;
+  reset: () => void;
+}
+const useCreateFormStore = createStore<CreateFormState>((set) => ({
+  form: INITIAL,
+  update: (patch) => set((s) => ({ form: { ...s.form, ...patch } })),
+  reset: () => set({ form: INITIAL }),
+}));
+
 export function useCreateDeliveryForm() {
+  const form = useCreateFormStore((s) => s.form);
+  const update = useCreateFormStore((s) => s.update);
+  const reset = useCreateFormStore((s) => s.reset);
   const quote = useDeliveryStore((s) => s.quote);
-  const resetQuote = useDeliveryStore((s) => s.resetQuote);
   const create = useDeliveryStore((s) => s.create);
   const price = useDeliveryStore((s) => s.price);
   const quoting = useDeliveryStore((s) => s.quoting);
@@ -28,9 +59,71 @@ export function useCreateDeliveryForm() {
   const loading = useDeliveryStore((s) => s.loading);
   const error = useDeliveryStore((s) => s.error);
 
-  const requestQuote = useCallback(() => quote(SAMPLE_PAYLOAD), [quote]);
+  const findAddress = useCallback(
+    (id: string | null): Address | undefined => savedAddresses.find((a) => a.id === id),
+    [],
+  );
 
-  const submit = useCallback((): Promise<Delivery | null> => create(SAMPLE_PAYLOAD), [create]);
+  /** Adım geçerli mi — "Devam et" bu false iken pasif. */
+  const canProceed = useCallback(
+    (step: CreateStepKey): boolean => {
+      switch (step) {
+        case 'pickup':
+          return !!form.pickupAddressId;
+        case 'dropoff':
+          return !!form.dropoffAddressId && form.dropoffAddressId !== form.pickupAddressId;
+        case 'contacts':
+          return (
+            form.recipientName.trim().length > 0 &&
+            form.recipientPhone.trim().length > 0 &&
+            form.senderPhone.trim().length > 0
+          );
+        case 'price':
+          return !quoting && !quoteFailed;
+        case 'package':
+        case 'schedule':
+        case 'confirm':
+        default:
+          return true;
+      }
+    },
+    [form, quoting, quoteFailed],
+  );
 
-  return { requestQuote, resetQuote, submit, price, quoting, quoteFailed, loading, error };
+  const payload = useMemo<CreateDeliveryPayload | null>(() => {
+    const pickup = findAddress(form.pickupAddressId);
+    const dropoff = findAddress(form.dropoffAddressId);
+    if (!pickup || !dropoff) return null;
+    return {
+      pickupAddress: pickup,
+      dropoffAddress: dropoff,
+      packageType: form.packageType,
+      packageDescription: form.packageNote.trim() || undefined,
+    };
+  }, [form, findAddress]);
+
+  const requestQuote = useCallback(() => {
+    if (payload) quote(payload);
+  }, [payload, quote]);
+
+  const submit = useCallback((): Promise<Delivery | null> => {
+    if (!payload) return Promise.resolve(null);
+    return create(payload);
+  }, [payload, create]);
+
+  return {
+    form,
+    update,
+    reset,
+    canProceed,
+    findAddress,
+    savedAddresses,
+    requestQuote,
+    submit,
+    price,
+    quoting,
+    quoteFailed,
+    loading,
+    error,
+  };
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { ArrowRight, Clock, Info, User } from 'lucide-react-native';
 import {
@@ -21,9 +21,8 @@ import {
   useTheme,
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
-import { addresses } from '../../mocks/addresses';
-import { deliveries } from '../../mocks/deliveries';
-import type { PackageTypeId } from '../../types';
+import type { Address, PackageTypeId, PriceBreakdown } from '../../types';
+import type { CreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 
 /** The seven steps, in order. Exported so stories can address them by name. */
 export const CREATE_STEPS = [
@@ -39,29 +38,39 @@ export const CREATE_STEPS = [
 export type CreateStepKey = (typeof CREATE_STEPS)[number]['key'];
 
 export interface CreateDeliveryScreenProps {
-  /** Which step to render. Stories set this directly. */
   step?: CreateStepKey;
-  /** Blocks progress and shows a message — used for the validation story. */
+  /** Form verisi ve seçim callback'i — hook'tan gelir (ekran saf/kontrollü). */
+  form: CreateDeliveryForm;
+  savedAddresses: Address[];
+  onChange: (patch: Partial<CreateDeliveryForm>) => void;
+  /** false iken "Devam et" pasif. */
+  canProceed?: boolean;
+  /** Sunucu/oluşturma hatası. */
   errorText?: string;
-  /** Price is still being calculated. */
+  price?: PriceBreakdown | null;
   priceLoading?: boolean;
-  /** Pricing failed — the summary step shows a retry. */
   priceFailed?: boolean;
   onNext?: () => void;
   onBack?: () => void;
   onClose?: () => void;
 }
 
+function addressLabel(a?: Address): string | undefined {
+  return a ? `${a.title} · ${a.fullAddress}` : undefined;
+}
+
 /**
- * Multi-step delivery creation.
- *
- * One screen component with a `step` prop rather than seven screen files: the
- * chrome, the footer and the progress are identical across steps, and only the
- * body changes. Each step is exposed as its own Storybook story.
+ * Multi-step delivery creation. Tek ekran + `step` prop'u; gövde adıma göre
+ * değişir. Form state'i dışarıda (useCreateDeliveryForm) — seçimler onChange ile.
  */
 export function CreateDeliveryScreen({
   step = 'pickup',
+  form,
+  savedAddresses,
+  onChange,
+  canProceed = true,
   errorText,
+  price,
   priceLoading = false,
   priceFailed = false,
   onNext,
@@ -73,11 +82,11 @@ export function CreateDeliveryScreen({
   const meta = CREATE_STEPS[Math.max(0, index)];
   const isLast = index === CREATE_STEPS.length - 1;
 
-  const [packageType, setPackageType] = useState<PackageTypeId>('small');
-  const [note, setNote] = useState('');
-  const [senderPhone, setSenderPhone] = useState('532 114 22 07');
-  const [recipientPhone, setRecipientPhone] = useState('');
-  const [timing, setTiming] = useState<'now' | 'scheduled'>('now');
+  const pickup = savedAddresses.find((a) => a.id === form.pickupAddressId);
+  const dropoff = savedAddresses.find((a) => a.id === form.dropoffAddressId);
+  const dropoffOptions = savedAddresses.filter((a) => a.id !== form.pickupAddressId);
+
+  const selectPackage = (value: PackageTypeId) => onChange({ packageType: value });
 
   return (
     <ScreenScaffold
@@ -96,7 +105,7 @@ export function CreateDeliveryScreen({
           label={isLast ? 'Teslimatı onayla' : 'Devam et'}
           iconEnd={isLast ? undefined : ArrowRight}
           onPress={onNext}
-          disabled={!!errorText || (step === 'price' && (priceLoading || priceFailed))}
+          disabled={!canProceed}
         />
       }
     >
@@ -106,45 +115,58 @@ export function CreateDeliveryScreen({
 
           {step === 'pickup' && (
             <>
-              <AddressField label="Alış adresi" required value="Ofis · Büyükdere Cad. No:127" />
+              <AddressField
+                label="Alış adresi"
+                required
+                value={addressLabel(pickup)}
+                placeholder="Adres seçin"
+              />
               <Typography variant="micro" tone="muted" overline>
                 Kayıtlı adresler
               </Typography>
-              <AddressCard address={addresses.officeLevent} variant="saved" selected onPress={() => {}} />
-              <AddressCard address={addresses.homeKadikoy} variant="saved" onPress={() => {}} />
-              <AddressCard address={addresses.storeNisantasi} variant="saved" onPress={() => {}} />
+              {savedAddresses.map((a) => (
+                <AddressCard
+                  key={a.id}
+                  address={a}
+                  variant="saved"
+                  selected={form.pickupAddressId === a.id}
+                  onPress={() => onChange({ pickupAddressId: a.id })}
+                />
+              ))}
             </>
           )}
 
           {step === 'dropoff' && (
             <>
-              <AddressField label="Teslimat adresi" required placeholder="Adres seçin" />
-              <TextField
-                label="Kurye için not"
-                placeholder="Kapı kodu, kat, bina tarifi…"
-                value={note}
-                onChangeText={setNote}
-                multiline
-                rows={3}
-                maxLength={200}
-                showCounter
+              <AddressField
+                label="Teslimat adresi"
+                required
+                value={addressLabel(dropoff)}
+                placeholder="Adres seçin"
               />
               <Typography variant="micro" tone="muted" overline>
                 Kayıtlı adresler
               </Typography>
-              <AddressCard address={addresses.homeKadikoy} variant="saved" onPress={() => {}} />
-              <AddressCard address={addresses.warehouseTuzla} variant="saved" onPress={() => {}} />
+              {dropoffOptions.map((a) => (
+                <AddressCard
+                  key={a.id}
+                  address={a}
+                  variant="saved"
+                  selected={form.dropoffAddressId === a.id}
+                  onPress={() => onChange({ dropoffAddressId: a.id })}
+                />
+              ))}
             </>
           )}
 
           {step === 'package' && (
             <>
-              <PackageTypeSelector value={packageType} onChange={setPackageType} />
+              <PackageTypeSelector value={form.packageType} onChange={selectPackage} />
               <TextField
                 label="Paket açıklaması"
                 placeholder="İçeriği kısaca tanımla"
-                value={note}
-                onChangeText={setNote}
+                value={form.packageNote}
+                onChangeText={(t) => onChange({ packageNote: t })}
                 helperText="Kırılabilir içerik varsa mutlaka belirt."
               />
             </>
@@ -157,17 +179,28 @@ export function CreateDeliveryScreen({
                   Gönderici
                 </Typography>
                 <TextField label="Ad soyad" value="İpek Kılıç" onChangeText={() => {}} icon={User} />
-                <PhoneField label="Telefon" value={senderPhone} onChangeText={setSenderPhone} required />
+                <PhoneField
+                  label="Telefon"
+                  value={form.senderPhone}
+                  onChangeText={(t) => onChange({ senderPhone: t })}
+                  required
+                />
               </Surface>
               <Surface tone="elevated" radius="lg" padding="lg" bordered style={{ gap: theme.spacing.md }}>
                 <Typography variant="micro" tone="muted" overline>
                   Alıcı
                 </Typography>
-                <TextField label="Ad soyad" value="" onChangeText={() => {}} icon={User} required />
+                <TextField
+                  label="Ad soyad"
+                  value={form.recipientName}
+                  onChangeText={(t) => onChange({ recipientName: t })}
+                  icon={User}
+                  required
+                />
                 <PhoneField
                   label="Telefon"
-                  value={recipientPhone}
-                  onChangeText={setRecipientPhone}
+                  value={form.recipientPhone}
+                  onChangeText={(t) => onChange({ recipientPhone: t })}
                   required
                   helperText="Teslimat kodu bu numaraya gönderilir."
                 />
@@ -181,17 +214,17 @@ export function CreateDeliveryScreen({
                 label="Hemen gönder"
                 hint="Kurye ataması anında başlar"
                 icon={Clock}
-                selected={timing === 'now'}
-                onPress={() => setTiming('now')}
+                selected={form.timing === 'now'}
+                onPress={() => onChange({ timing: 'now' })}
               />
               <ChoiceCard
                 label="İleri tarihe planla"
                 hint="Belirlediğin saat aralığında alınır"
                 icon={Clock}
-                selected={timing === 'scheduled'}
-                onPress={() => setTiming('scheduled')}
+                selected={form.timing === 'scheduled'}
+                onPress={() => onChange({ timing: 'scheduled' })}
               />
-              {timing === 'scheduled' && (
+              {form.timing === 'scheduled' && (
                 <>
                   <DatePickerTrigger label="Tarih" required value="22 Temmuz Salı" />
                   <TimePickerTrigger label="Saat aralığı" required value="16:00 – 18:00" />
@@ -203,7 +236,7 @@ export function CreateDeliveryScreen({
           {step === 'price' && (
             <>
               <PriceSummary
-                price={priceFailed ? undefined : deliveries.pending.price}
+                price={priceFailed ? undefined : price ?? undefined}
                 distanceKm={11.4}
                 loading={priceLoading}
                 onRetry={() => {}}
@@ -220,10 +253,13 @@ export function CreateDeliveryScreen({
 
           {step === 'confirm' && (
             <>
-              <AddressCard address={addresses.officeLevent} variant="pickup" />
-              <AddressCard address={addresses.homeKadikoy} variant="dropoff" />
-              <PackageInfoCard type={packageType} description="A4 zarf içinde sözleşme evrakı" />
-              <PriceSummary price={deliveries.pending.price} distanceKm={11.4} />
+              {pickup && <AddressCard address={pickup} variant="pickup" />}
+              {dropoff && <AddressCard address={dropoff} variant="dropoff" />}
+              <PackageInfoCard
+                type={form.packageType}
+                description={form.packageNote.trim() || 'Paket açıklaması yok'}
+              />
+              <PriceSummary price={price ?? undefined} distanceKm={11.4} />
               <InlineAlert
                 tone="info"
                 message="Onayladığında ödeme kayıtlı kartından tahsil edilir ve kurye araması başlar."

@@ -80,9 +80,21 @@ export function CreateContainer() {
   const index = CREATE_STEPS.findIndex((s) => s.key === step);
   const next = CREATE_STEPS[index + 1];
   const prev = CREATE_STEPS[index - 1];
-  const { requestQuote, submit, quoting, quoteFailed, error } = useCreateDeliveryForm();
+  const {
+    form,
+    update,
+    reset,
+    canProceed,
+    savedAddresses,
+    requestQuote,
+    submit,
+    price,
+    quoting,
+    quoteFailed,
+    error,
+  } = useCreateDeliveryForm();
 
-  // Fiyat adımına gelince ücreti sorgula.
+  // Fiyat adımına gelince ücreti sorgula (payload hazırsa).
   useEffect(() => {
     if (step === 'price') requestQuote();
   }, [step, requestQuote]);
@@ -90,6 +102,11 @@ export function CreateContainer() {
   return (
     <CreateDeliveryScreen
       step={step}
+      form={form}
+      savedAddresses={savedAddresses}
+      onChange={update}
+      canProceed={canProceed(step)}
+      price={price}
       priceLoading={quoting}
       priceFailed={quoteFailed}
       errorText={error}
@@ -98,8 +115,9 @@ export function CreateContainer() {
           navigation.replace(ROUTES.CREATE, { step: next.key });
           return;
         }
-        // Son adım (confirm): oluştur → takip ekranına reset.
+        // Son adım (confirm): oluştur → formu sıfırla → takip ekranına reset.
         await submit();
+        reset();
         navigation.reset({
           index: 1,
           routes: [
@@ -109,7 +127,10 @@ export function CreateContainer() {
         });
       }}
       onBack={() => prev && navigation.replace(ROUTES.CREATE, { step: prev.key })}
-      onClose={() => navigation.reset({ index: 0, routes: [{ name: ROUTES.CUSTOMER_TABS }] })}
+      onClose={() => {
+        reset();
+        navigation.reset({ index: 0, routes: [{ name: ROUTES.CUSTOMER_TABS }] });
+      }}
     />
   );
 }
