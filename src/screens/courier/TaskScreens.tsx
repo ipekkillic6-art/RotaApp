@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import {
   Camera,
   CheckCircle2,
@@ -36,6 +36,7 @@ import {
   useTheme,
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
+import { CameraCaptureModal } from '../_shared/CameraCaptureModal';
 import { formatDistance, formatDuration } from '../../utils/format';
 import type { Delivery, FailureReason } from '../../types';
 import { FAILURE_REASONS } from '../../design-system/domain/delivery/status';
@@ -229,6 +230,9 @@ export function PickupScreen({
   onReportProblem,
 }: PickupScreenProps) {
   const theme = useTheme();
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const hasPhoto = photoAttached || !!photoUri;
 
   const label = {
     arriving: 'Adrese ulaştım',
@@ -292,14 +296,38 @@ export function PickupScreen({
                 size="compact"
                 primaryAction={{ label: 'Ayarları aç', onPress: () => {} }}
               />
-            ) : photoAttached ? (
-              <InlineAlert
-                tone="success"
-                icon={CheckCircle2}
-                message="Fotoğraf eklendi. Anlaşmazlık durumunda kanıt olarak kullanılır."
-              />
+            ) : hasPhoto ? (
+              <>
+                {photoUri && (
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={{ height: 160, borderRadius: theme.radius.md }}
+                    resizeMode="cover"
+                  />
+                )}
+                <InlineAlert
+                  tone="success"
+                  icon={CheckCircle2}
+                  message="Fotoğraf eklendi. Anlaşmazlık durumunda kanıt olarak kullanılır."
+                />
+                {photoUri && (
+                  <Touchable
+                    onPress={() => setCameraOpen(true)}
+                    feedback="opacity"
+                    accessibilityLabel="Yeniden çek"
+                  >
+                    <Typography variant="caption" tone="accent" weight="semibold">
+                      Yeniden çek
+                    </Typography>
+                  </Touchable>
+                )}
+              </>
             ) : (
-              <Touchable onPress={() => {}} feedback="card" accessibilityLabel="Fotoğraf ekle">
+              <Touchable
+                onPress={() => setCameraOpen(true)}
+                feedback="card"
+                accessibilityLabel="Fotoğraf ekle"
+              >
                 <View
                   style={{
                     height: 120,
@@ -322,6 +350,13 @@ export function PickupScreen({
           </Surface>
         </View>
       </ScrollContainer>
+
+      <CameraCaptureModal
+        visible={cameraOpen}
+        mode="photo"
+        onClose={() => setCameraOpen(false)}
+        onCapture={(uri) => setPhotoUri(uri)}
+      />
     </ScreenScaffold>
   );
 }
@@ -455,6 +490,9 @@ export function DeliveryVerificationScreen({
   const theme = useTheme();
   const [method, setMethod] = useState<VerificationMethod>(initialMethod);
   const [code, setCode] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [scannedCode, setScannedCode] = useState<string | null>(null);
+  const [cameraMode, setCameraMode] = useState<'photo' | 'qr' | null>(null);
 
   return (
     <ScreenScaffold
@@ -514,21 +552,35 @@ export function DeliveryVerificationScreen({
           {method === 'qr' && (
             <Surface tone="elevated" radius="lg" padding="lg" bordered style={{ gap: theme.spacing.md }}>
               <Typography variant="h3">QR kodu okut</Typography>
-              <View
-                style={{
-                  height: 200,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: theme.colors.background.secondary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: theme.spacing.sm,
-                }}
-              >
-                <Icon icon={QrCode} size={64} tone="muted" strokeWidth={1.25} />
-                <Typography variant="micro" tone="muted">
-                  Kamera önizlemesi
-                </Typography>
-              </View>
+              {scannedCode ? (
+                <InlineAlert
+                  tone="success"
+                  icon={CheckCircle2}
+                  message={`QR okundu: ${scannedCode}. Teslimatı tamamlayabilirsin.`}
+                />
+              ) : (
+                <Touchable
+                  onPress={() => setCameraMode('qr')}
+                  feedback="card"
+                  accessibilityLabel="QR okuyucuyu aç"
+                >
+                  <View
+                    style={{
+                      height: 200,
+                      borderRadius: theme.radius.md,
+                      backgroundColor: theme.colors.background.secondary,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: theme.spacing.sm,
+                    }}
+                  >
+                    <Icon icon={QrCode} size={64} tone="muted" strokeWidth={1.25} />
+                    <Typography variant="micro" tone="muted">
+                      Okuyucuyu açmak için dokun
+                    </Typography>
+                  </View>
+                </Touchable>
+              )}
             </Surface>
           )}
 
@@ -538,25 +590,48 @@ export function DeliveryVerificationScreen({
               <Typography variant="bodySm" tone="secondary">
                 Paketi bırakırken kapı önünü fotoğrafla. Fotoğraf müşteriyle paylaşılır.
               </Typography>
-              <Touchable onPress={() => {}} feedback="card" accessibilityLabel="Fotoğraf çek">
-                <View
-                  style={{
-                    height: 160,
-                    borderRadius: theme.radius.md,
-                    borderWidth: theme.borderWidth.thick,
-                    borderStyle: 'dashed',
-                    borderColor: theme.colors.border.strong,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: theme.spacing.xs,
-                  }}
+              {photoUri ? (
+                <>
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={{ height: 200, borderRadius: theme.radius.md }}
+                    resizeMode="cover"
+                  />
+                  <Touchable
+                    onPress={() => setCameraMode('photo')}
+                    feedback="opacity"
+                    accessibilityLabel="Yeniden çek"
+                  >
+                    <Typography variant="caption" tone="accent" weight="semibold">
+                      Yeniden çek
+                    </Typography>
+                  </Touchable>
+                </>
+              ) : (
+                <Touchable
+                  onPress={() => setCameraMode('photo')}
+                  feedback="card"
+                  accessibilityLabel="Fotoğraf çek"
                 >
-                  <Icon icon={Camera} size="xl" tone="muted" />
-                  <Typography variant="caption" tone="secondary">
-                    Fotoğraf çek
-                  </Typography>
-                </View>
-              </Touchable>
+                  <View
+                    style={{
+                      height: 160,
+                      borderRadius: theme.radius.md,
+                      borderWidth: theme.borderWidth.thick,
+                      borderStyle: 'dashed',
+                      borderColor: theme.colors.border.strong,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: theme.spacing.xs,
+                    }}
+                  >
+                    <Icon icon={Camera} size="xl" tone="muted" />
+                    <Typography variant="caption" tone="secondary">
+                      Fotoğraf çek
+                    </Typography>
+                  </View>
+                </Touchable>
+              )}
             </Surface>
           )}
 
@@ -588,6 +663,14 @@ export function DeliveryVerificationScreen({
           )}
         </View>
       </ScrollContainer>
+
+      <CameraCaptureModal
+        visible={cameraMode !== null}
+        mode={cameraMode ?? 'photo'}
+        onClose={() => setCameraMode(null)}
+        onCapture={(uri) => setPhotoUri(uri)}
+        onScan={(data) => setScannedCode(data)}
+      />
     </ScreenScaffold>
   );
 }
