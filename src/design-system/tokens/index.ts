@@ -13,6 +13,7 @@ export {
   overline,
   tabular,
   fontFamily,
+  interFontFamily,
   fontWeight,
   type TypographyVariant,
 } from './typography';

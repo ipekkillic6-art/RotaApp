@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Text as RNText, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 import { useTheme } from '../themes';
 import {
-  fontFamily,
+  interFontFamily,
   fontWeight,
   overline as overlineStyle,
   tabular as tabularStyle,
@@ -60,12 +60,17 @@ export function Typography({
   const resolved = useMemo<TextStyle>(() => {
     const base = overline ? overlineStyle : theme.typography[variant];
     const scale = theme.fontScale;
+    // Ağırlığı, adlandırılmış Inter ailesi üzerinden uygula (RN'de özel font
+    // fontWeight'e — özellikle iOS'ta — güvenmez). fontWeight'i stilden düşür.
+    const numericWeight = (weight ? fontWeight[weight] : base.fontWeight) ?? '400';
+    const { fontWeight: _omitWeight, ...baseNoWeight } = base;
     return {
-      fontFamily,
-      ...base,
+      ...baseNoWeight,
+      fontFamily:
+        interFontFamily[numericWeight as keyof typeof interFontFamily] ??
+        interFontFamily['400'],
       fontSize: (base.fontSize ?? 15) * scale,
       lineHeight: (base.lineHeight ?? 22) * scale,
-      ...(weight ? { fontWeight: fontWeight[weight] } : null),
       color: color ?? theme.colors.text[tone],
       ...(align ? { textAlign: align } : null),
       ...(tabular ? tabularStyle : null),

@@ -9,15 +9,14 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../themes';
 
 /**
- * Safe-area insets.
+ * Fallback safe-area insets.
  *
- * The real app should swap this for `useSafeAreaInsets()` from
- * react-native-safe-area-context — that dependency is intentionally not added
- * here because Storybook has no device to read insets from. The Storybook
- * device frame supplies the same numbers, so layouts are honest either way.
+ * Gerçek cihazda `useSafeAreaInsets()` kullanılır (aşağıda). Bu sabit yalnızca
+ * bir SafeAreaProvider yokken (örn. izole test) makul bir varsayılan sağlar.
  */
 export const DEFAULT_INSETS = { top: 54, bottom: 34 } as const;
 
@@ -34,14 +33,15 @@ export function SafeAreaContainer({
   insets,
   style,
 }: SafeAreaContainerProps) {
+  const safeInsets = useSafeAreaInsets();
   return (
     <View
       style={[
         {
           flex: 1,
-          paddingTop: edges.includes('top') ? insets?.top ?? DEFAULT_INSETS.top : 0,
+          paddingTop: edges.includes('top') ? insets?.top ?? safeInsets.top : 0,
           paddingBottom: edges.includes('bottom')
-            ? insets?.bottom ?? DEFAULT_INSETS.bottom
+            ? insets?.bottom ?? safeInsets.bottom
             : 0,
         },
         style,

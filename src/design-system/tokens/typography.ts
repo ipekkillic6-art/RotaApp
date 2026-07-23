@@ -11,9 +11,6 @@ import type { TextStyle } from 'react-native';
  * place — prices, ETAs, delivery codes, counters — so digits stop jittering.
  */
 
-export const fontFamily =
-  "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-
 export const fontWeight = {
   regular: '400',
   medium: '500',
@@ -21,6 +18,24 @@ export const fontWeight = {
   bold: '700',
   extrabold: '800',
 } as const satisfies Record<string, TextStyle['fontWeight']>;
+
+/**
+ * Yüklü Inter font aileleri (numeric ağırlık → font adı).
+ *
+ * RN'de özel font `fontWeight`'e güvenmez — her ağırlık ayrı bir font adıdır.
+ * Adlar iki platformda da aynıdır (@expo-google-fonts/inter). Typography bu
+ * haritayı kullanarak variant'ın ağırlığına göre doğru Inter ailesini seçer.
+ */
+export const interFontFamily = {
+  '400': 'Inter_400Regular',
+  '500': 'Inter_500Medium',
+  '600': 'Inter_600SemiBold',
+  '700': 'Inter_700Bold',
+  '800': 'Inter_800ExtraBold',
+} as const;
+
+/** Varsayılan (gövde) font ailesi — TextInput gibi tek ağırlıklı yerler için. */
+export const fontFamily: string = interFontFamily['400'];
 
 export type TypographyVariant =
   | 'display'
