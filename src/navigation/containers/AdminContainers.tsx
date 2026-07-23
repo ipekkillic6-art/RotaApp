@@ -70,6 +70,7 @@ export function OpsDeliveriesContainer() {
       loading={loading && list.length === 0}
       refreshing={refreshing}
       onRefresh={onRefresh}
+      onSearch={(query) => fetchDeliveries({ query })}
       onOpenDelivery={(d) => navigation.navigate(ROUTES.OPS_DELIVERY_DETAIL, { deliveryId: keyFor(d) })}
     />
   );

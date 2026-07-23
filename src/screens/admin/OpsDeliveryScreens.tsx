@@ -41,6 +41,8 @@ export interface OpsDeliveryListScreenProps {
   /** Pull-to-refresh. */
   refreshing?: boolean;
   onRefresh?: () => void;
+  /** Arama sunucuya taşınır (debounce'lu). */
+  onSearch?: (query: string) => void;
   onOpenDelivery?: (delivery: Delivery) => void;
   onTabChange?: (key: string) => void;
 }
@@ -52,11 +54,19 @@ export function OpsDeliveryListScreen({
   emptyQuery,
   refreshing = false,
   onRefresh,
+  onSearch,
   onOpenDelivery,
   onTabChange,
 }: OpsDeliveryListScreenProps) {
   const theme = useTheme();
   const [query, setQuery] = useState(emptyQuery ?? '');
+
+  // Aramayı sunucuya taşı (debounce).
+  React.useEffect(() => {
+    if (!onSearch) return;
+    const t = setTimeout(() => onSearch(query), 350);
+    return () => clearTimeout(t);
+  }, [query, onSearch]);
   const [scope, setScope] = useState('all');
   const [showFilters, setShowFilters] = useState(filtersOpen);
   const [statuses, setStatuses] = useState<string[]>([]);
