@@ -3,6 +3,8 @@ import { View } from 'react-native';
 import { SlidersHorizontal } from 'lucide-react-native';
 import {
   AppHeader,
+  BottomSheet,
+  Button,
   DeliveryCard,
   ScrollContainer,
   SearchField,
@@ -10,6 +12,7 @@ import {
   SkeletonList,
   StateView,
   STATE_PRESETS,
+  Typography,
   useTheme,
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
@@ -22,6 +25,12 @@ const FILTERS: Array<{ value: HistoryFilter; label: string }> = [
   { value: 'completed', label: 'Tamamlanan' },
   { value: 'cancelled', label: 'İptal' },
   { value: 'failed', label: 'Başarısız' },
+];
+
+type SortOrder = 'newest' | 'oldest';
+const SORT_OPTIONS: Array<{ value: SortOrder; label: string }> = [
+  { value: 'newest', label: 'Önce yeni' },
+  { value: 'oldest', label: 'Önce eski' },
 ];
 
 export interface DeliveryHistoryScreenProps {
@@ -47,6 +56,8 @@ export function DeliveryHistoryScreen({
   const theme = useTheme();
   const [filter, setFilter] = useState<HistoryFilter>(initialFilter);
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortOrder>('newest');
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const byFilter = deliveries.filter((d) => {
     if (filter === 'completed') return d.status === 'delivered';
@@ -55,13 +66,19 @@ export function DeliveryHistoryScreen({
     return true;
   });
 
-  const list = query
+  const searched = query
     ? byFilter.filter((d) =>
         `${d.trackingNumber} ${d.dropoffAddress.district} ${d.dropoffAddress.title}`
           .toLocaleLowerCase('tr')
           .includes(query.toLocaleLowerCase('tr')),
       )
     : byFilter;
+
+  const list = [...searched].sort((a, b) =>
+    sort === 'newest'
+      ? b.createdAt.localeCompare(a.createdAt)
+      : a.createdAt.localeCompare(b.createdAt),
+  );
 
   const counts = FILTERS.map((f) => ({
     ...f,
@@ -77,6 +94,7 @@ export function DeliveryHistoryScreen({
   }));
 
   return (
+    <>
     <ScreenScaffold
       header={
         <View>
@@ -86,7 +104,7 @@ export function DeliveryHistoryScreen({
               {
                 icon: SlidersHorizontal,
                 accessibilityLabel: 'Filtrele',
-                onPress: onOpenFilters ?? (() => {}),
+                onPress: onOpenFilters ?? (() => setSheetOpen(true)),
               },
             ]}
           />
@@ -147,5 +165,29 @@ export function DeliveryHistoryScreen({
         </View>
       </ScrollContainer>
     </ScreenScaffold>
+
+      <BottomSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Filtrele"
+        description="Teslimat geçmişini sırala ve süz"
+        footer={<Button label="Uygula" onPress={() => setSheetOpen(false)} />}
+      >
+        <View style={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.md }}>
+          <View style={{ gap: theme.spacing.sm }}>
+            <Typography variant="caption" tone="secondary">
+              Sıralama
+            </Typography>
+            <SegmentedControl value={sort} onChange={setSort} options={SORT_OPTIONS} />
+          </View>
+          <View style={{ gap: theme.spacing.sm }}>
+            <Typography variant="caption" tone="secondary">
+              Durum
+            </Typography>
+            <SegmentedControl value={filter} onChange={setFilter} options={FILTERS} scrollable />
+          </View>
+        </View>
+      </BottomSheet>
+    </>
   );
 }
