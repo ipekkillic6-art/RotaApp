@@ -203,6 +203,17 @@ export interface FaqItem {
   answer: string;
 }
 
+export type ChatSender = 'customer' | 'courier';
+
+/** Müşteri ↔ kurye mesajı (teslimat takibi sohbeti). */
+export interface ChatMessage {
+  id: string;
+  sender: ChatSender;
+  text: string;
+  /** ISO timestamp. */
+  at: string;
+}
+
 export type CardBrand = 'visa' | 'mastercard' | 'amex' | 'troy' | 'unknown';
 
 /** Kayıtlı ödeme kartı. Güvenlik için yalnızca son 4 hane + marka saklanır. */

@@ -6,3 +6,4 @@ export { useOpsStore } from './opsStore';
 export { useNotificationStore } from './notificationStore';
 export { useSettingsStore } from './settingsStore';
 export { usePaymentStore } from './paymentStore';
+export { useChatStore } from './chatStore';

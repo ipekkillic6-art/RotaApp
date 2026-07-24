@@ -5,4 +5,5 @@ export { opsService } from './opsService';
 export { addressService } from './addressService';
 export { settingsService } from './settingsService';
 export { paymentService } from './paymentService';
+export { chatService } from './chatService';
 export { notificationService } from './notificationService';

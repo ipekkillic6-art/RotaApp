@@ -56,6 +56,7 @@ export type RootStackParamList = {
   AddAddress: { addressId?: string } | undefined;
   MapPicker: { lat?: number; lng?: number } | undefined;
   Track: { deliveryId: string };
+  CourierChat: { deliveryId: string };
   DeliveryDetail: { deliveryId: string };
   Rate: { deliveryId: string };
   Notifications: undefined;

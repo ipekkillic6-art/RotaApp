@@ -20,6 +20,7 @@ import {
   AddAddressContainer,
   MapPickerContainer,
   TrackContainer,
+  CourierChatContainer,
   DeliveryDetailContainer,
   RateContainer,
   NotificationsContainer,
@@ -76,6 +77,7 @@ export function RootNavigator() {
           <Stack.Screen name="AddAddress" component={AddAddressContainer} />
           <Stack.Screen name="MapPicker" component={MapPickerContainer} />
           <Stack.Screen name="Track" component={TrackContainer} />
+          <Stack.Screen name="CourierChat" component={CourierChatContainer} />
           <Stack.Screen name="DeliveryDetail" component={DeliveryDetailContainer} />
           <Stack.Screen name="Rate" component={RateContainer} />
           <Stack.Screen name="Notifications" component={NotificationsContainer} />
