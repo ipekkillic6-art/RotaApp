@@ -41,4 +41,8 @@ export const ROUTES = {
   OPS_DELIVERY_DETAIL: 'OpsDeliveryDetail',
   OPS_ASSIGN: 'OpsAssign',
   OPS_ALERTS: 'OpsAlerts',
+  OPS_ANALYTICS: 'OpsAnalytics',
+
+  // courier
+  COURIER_PERFORMANCE: 'CourierPerformance',
 } as const satisfies Record<string, keyof RootStackParamList>;

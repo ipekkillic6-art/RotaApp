@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert, Linking } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -297,6 +298,7 @@ export function TrackContainer() {
   const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'Track'>>().params;
   const current = useDeliveryStore((s) => s.current);
   const fetchById = useDeliveryStore((s) => s.fetchById);
+  const { online } = useNetworkStatus();
 
   // Mount'ta çek + 15 sn'de bir yenile (socket Faz 6'da).
   useEffect(() => {
@@ -305,7 +307,25 @@ export function TrackContainer() {
     return () => clearInterval(t);
   }, [deliveryId, fetchById]);
 
-  return <TrackDeliveryScreen delivery={current ?? byId(deliveryId)} onBack={() => navigation.goBack()} />;
+  const delivery = current ?? byId(deliveryId);
+  const courierPhone = delivery.courier?.phone;
+
+  return (
+    <TrackDeliveryScreen
+      delivery={delivery}
+      offline={!online}
+      onBack={() => navigation.goBack()}
+      onCallCourier={
+        courierPhone
+          ? () =>
+              Linking.openURL(`tel:${courierPhone.replace(/\s/g, '')}`).catch(() =>
+                Alert.alert('Aranamadı', courierPhone, [{ text: 'Tamam' }]),
+              )
+          : undefined
+      }
+      onSupport={() => navigation.navigate(ROUTES.HELP_SUPPORT)}
+    />
+  );
 }
 
 export function HistoryContainer() {
@@ -352,6 +372,7 @@ export function DeliveryDetailContainer() {
     <DeliveryDetailScreen
       delivery={current ?? byId(deliveryId)}
       onBack={() => navigation.goBack()}
+      onSupport={() => navigation.navigate(ROUTES.HELP_SUPPORT)}
       onRate={() => navigation.navigate(ROUTES.RATE, { deliveryId })}
       onReorder={() =>
         navigation.reset({

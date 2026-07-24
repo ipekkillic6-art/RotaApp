@@ -39,6 +39,7 @@ export interface CourierHomeScreenProps {
   offline?: boolean;
   onOpenTask?: (delivery: Delivery) => void;
   onAcceptTask?: (delivery: Delivery) => void;
+  onOpenNotifications?: () => void;
   onTabChange?: (key: string) => void;
 }
 
@@ -62,6 +63,7 @@ export function CourierHomeScreen({
   offline = false,
   onOpenTask,
   onAcceptTask,
+  onOpenNotifications,
   onTabChange,
 }: CourierHomeScreenProps) {
   const theme = useTheme();
@@ -82,7 +84,14 @@ export function CourierHomeScreen({
               </Typography>
             </View>
           }
-          actions={[{ icon: Bell, accessibilityLabel: 'Bildirimler', onPress: () => {}, badge: true }]}
+          actions={[
+            {
+              icon: Bell,
+              accessibilityLabel: 'Bildirimler',
+              onPress: onOpenNotifications ?? (() => {}),
+              badge: true,
+            },
+          ]}
         />
       }
       role="courier"

@@ -43,6 +43,8 @@ export function OpsDashboardContainer() {
       loading={loading && !metrics}
       onOpenDelivery={(d) => navigation.navigate(ROUTES.OPS_DELIVERY_DETAIL, { deliveryId: keyFor(d) })}
       onAssignCourier={(d) => navigation.navigate(ROUTES.OPS_ASSIGN, { deliveryId: keyFor(d) })}
+      onOpenAlerts={() => navigation.navigate(ROUTES.OPS_ALERTS)}
+      onOpenAnalytics={() => navigation.navigate(ROUTES.OPS_ANALYTICS)}
     />
   );
 }
@@ -123,6 +125,7 @@ export function OpsCouriersContainer() {
 }
 
 export function OpsAnalyticsContainer() {
+  const navigation = useNavigation<Nav>();
   const metrics = useOpsStore((s) => s.metrics);
   const couriers = useOpsStore((s) => s.couriers);
   return (
@@ -131,6 +134,7 @@ export function OpsAnalyticsContainer() {
       regions={regionBreakdown}
       cancellations={cancellationReasons}
       topCouriers={(couriers.length ? couriers : courierList).slice(0, 3)}
+      onBack={() => navigation.goBack()}
     />
   );
 }

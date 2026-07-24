@@ -29,11 +29,13 @@ import {
   OnTheWayContainer,
   VerifyContainer,
   FailureContainer,
+  PerformanceContainer,
 } from './containers/CourierContainers';
 import {
   OpsDeliveryDetailContainer,
   OpsAssignContainer,
   OpsAlertsContainer,
+  OpsAnalyticsContainer,
 } from './containers/AdminContainers';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -82,6 +84,7 @@ export function RootNavigator() {
 
           {/* Courier stack */}
           <Stack.Screen name="JobOffer" component={JobOfferContainer} />
+          <Stack.Screen name="CourierPerformance" component={PerformanceContainer} />
           <Stack.Screen name="CourierTaskDetail" component={CourierTaskDetailContainer} />
           <Stack.Screen name="Pickup" component={PickupContainer} />
           <Stack.Screen name="OnTheWay" component={OnTheWayContainer} />
@@ -92,6 +95,7 @@ export function RootNavigator() {
           <Stack.Screen name="OpsDeliveryDetail" component={OpsDeliveryDetailContainer} />
           <Stack.Screen name="OpsAssign" component={OpsAssignContainer} />
           <Stack.Screen name="OpsAlerts" component={OpsAlertsContainer} />
+          <Stack.Screen name="OpsAnalytics" component={OpsAnalyticsContainer} />
         </Stack.Group>
       )}
     </Stack.Navigator>

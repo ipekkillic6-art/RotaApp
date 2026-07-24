@@ -74,6 +74,7 @@ export function CourierHomeContainer() {
         })
       }
       onAcceptTask={() => navigation.navigate(ROUTES.JOB_OFFER)}
+      onOpenNotifications={() => navigation.navigate(ROUTES.NOTIFICATIONS)}
     />
   );
 }
@@ -220,22 +221,26 @@ export function FailureContainer() {
 // Kazanç ve performans salt-okunur ekranlar — mock veriyle beslenir
 // (courierService de aynı mock'u döndürür; gerçek backend'de servise geçilir).
 export function EarningsContainer() {
+  const navigation = useNavigation<Nav>();
   return (
     <EarningsScreen
       periods={earningsPeriods}
       byDay={earningsByDay}
       pendingPayout={842}
       totalEarnings={64_820}
+      onOpenPerformance={() => navigation.navigate(ROUTES.COURIER_PERFORMANCE)}
     />
   );
 }
 
 export function PerformanceContainer() {
+  const navigation = useNavigation<Nav>();
   return (
     <CourierPerformanceScreen
       courier={couriers.burak}
       performance={courierPerformance}
       reviews={customerReviews}
+      onBack={() => navigation.goBack()}
     />
   );
 }
