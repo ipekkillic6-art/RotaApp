@@ -8,6 +8,7 @@ import { CreateDeliveryScreen, CREATE_STEPS } from '../../screens/customer/Creat
 import { AddressPickerScreen } from '../../screens/customer/AddressPickerScreen';
 import { AddAddressScreen } from '../../screens/customer/AddAddressScreen';
 import { MapPickerScreen } from '../../screens/customer/MapPickerScreen';
+import { CourierChatScreen } from '../../screens/customer/CourierChatScreen';
 import { TrackDeliveryScreen } from '../../screens/customer/TrackDeliveryScreen';
 import { DeliveryHistoryScreen } from '../../screens/customer/DeliveryHistoryScreen';
 import { DeliveryDetailScreen } from '../../screens/customer/DeliveryDetailScreen';
@@ -15,6 +16,7 @@ import { RateDeliveryScreen } from '../../screens/customer/RateDeliveryScreen';
 import { NotificationsScreen } from '../../screens/customer/NotificationsScreen';
 
 import { useDeliveryStore } from '../../stores/deliveryStore';
+import { useChatStore } from '../../stores/chatStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAddressStore } from '../../stores/addressStore';
@@ -25,6 +27,7 @@ import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { useAddressForm } from '../../hooks/useAddressForm';
 import type { LatLng } from '../../design-system';
 import { recentAddresses } from '../../mocks/addresses';
+import { quickReplies } from '../../mocks/chat';
 import type { Address, Delivery } from '../../types';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
@@ -326,7 +329,50 @@ export function TrackContainer() {
               )
           : undefined
       }
+      onMessageCourier={
+        delivery.courier
+          ? () => navigation.navigate(ROUTES.COURIER_CHAT, { deliveryId })
+          : undefined
+      }
       onSupport={() => navigation.navigate(ROUTES.HELP_SUPPORT)}
+    />
+  );
+}
+
+export function CourierChatContainer() {
+  const navigation = useNavigation<Nav>();
+  const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'CourierChat'>>().params;
+  const current = useDeliveryStore((s) => s.current);
+  const messages = useChatStore((s) => s.messages);
+  const sending = useChatStore((s) => s.sending);
+  const fetchMessages = useChatStore((s) => s.fetchMessages);
+  const send = useChatStore((s) => s.send);
+
+  const delivery = current ?? byId(deliveryId);
+  const courier = delivery.courier;
+  const phone = courier?.phone;
+
+  useEffect(() => {
+    fetchMessages(deliveryId);
+  }, [deliveryId, fetchMessages]);
+
+  return (
+    <CourierChatScreen
+      courierName={courier?.fullName ?? 'Kurye'}
+      courierAvatarUrl={courier?.avatarUrl}
+      messages={messages}
+      quickReplies={quickReplies}
+      sending={sending}
+      onSend={(text) => send(deliveryId, text)}
+      onCall={
+        phone
+          ? () =>
+              Linking.openURL(`tel:${phone.replace(/\s/g, '')}`).catch(() =>
+                Alert.alert('Aranamadı', phone, [{ text: 'Tamam' }]),
+              )
+          : undefined
+      }
+      onBack={() => navigation.goBack()}
     />
   );
 }

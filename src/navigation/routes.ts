@@ -27,6 +27,7 @@ export const ROUTES = {
   ADD_ADDRESS: 'AddAddress',
   MAP_PICKER: 'MapPicker',
   TRACK: 'Track',
+  COURIER_CHAT: 'CourierChat',
   DELIVERY_DETAIL: 'DeliveryDetail',
   RATE: 'Rate',
   NOTIFICATIONS: 'Notifications',
