@@ -5,6 +5,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CustomerHomeScreen } from '../../screens/customer/CustomerHomeScreen';
 import { CreateDeliveryScreen, CREATE_STEPS } from '../../screens/customer/CreateDeliveryScreen';
 import { AddressPickerScreen } from '../../screens/customer/AddressPickerScreen';
+import { AddAddressScreen } from '../../screens/customer/AddAddressScreen';
+import { MapPickerScreen } from '../../screens/customer/MapPickerScreen';
 import { TrackDeliveryScreen } from '../../screens/customer/TrackDeliveryScreen';
 import { DeliveryHistoryScreen } from '../../screens/customer/DeliveryHistoryScreen';
 import { DeliveryDetailScreen } from '../../screens/customer/DeliveryDetailScreen';
@@ -14,11 +16,15 @@ import { NotificationsScreen } from '../../screens/customer/NotificationsScreen'
 import { useDeliveryStore } from '../../stores/deliveryStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useAddressStore } from '../../stores/addressStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
+import { useReverseGeocode } from '../../hooks/useReverseGeocode';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
+import { useAddressForm } from '../../hooks/useAddressForm';
+import type { LatLng } from '../../design-system';
 import { recentAddresses } from '../../mocks/addresses';
-import type { Delivery } from '../../types';
+import type { Address, Delivery } from '../../types';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
 import { byId, keyFor } from '../wiring';
@@ -143,6 +149,13 @@ export function CreateContainer() {
 export function AddressPickerContainer() {
   const navigation = useNavigation<Nav>();
   const { resolve, loading, permission } = useCurrentLocation();
+  const saved = useAddressStore((s) => s.saved);
+  const fetchSaved = useAddressStore((s) => s.fetchSaved);
+
+  // Kayıtlı adresleri yükle — yeni eklenen adres de burada görünür.
+  useEffect(() => {
+    fetchSaved();
+  }, [fetchSaved]);
 
   const useCurrent = useCallback(async () => {
     const address = await resolve();
@@ -152,11 +165,129 @@ export function AddressPickerContainer() {
 
   return (
     <AddressPickerScreen
+      savedAddresses={saved.length ? saved : undefined}
       locationPermission={permission === 'denied' ? 'denied' : 'granted'}
       locating={loading}
       onUseCurrentLocation={useCurrent}
+      onAddAddress={() => navigation.navigate(ROUTES.ADD_ADDRESS)}
+      onEditAddress={(a) => navigation.navigate(ROUTES.ADD_ADDRESS, { addressId: a.id })}
       onClose={() => navigation.goBack()}
       onSelect={() => navigation.goBack()}
+    />
+  );
+}
+
+export function AddAddressContainer() {
+  const params = useRoute<RouteProp<RootStackParamList, 'AddAddress'>>().params;
+  const addressId = params?.addressId;
+  const saved = useAddressStore((s) => s.saved);
+  const fetchSaved = useAddressStore((s) => s.fetchSaved);
+
+  // Düzenlemeye derin bağlantıyla girilirse liste boşsa yükle.
+  useEffect(() => {
+    if (addressId && saved.length === 0) fetchSaved();
+  }, [addressId, saved.length, fetchSaved]);
+
+  const initial = addressId ? saved.find((a) => a.id === addressId) : undefined;
+
+  // key: initial geç yüklenirse formu doğru veriyle yeniden kur (state init'i).
+  return <AddAddressForm key={initial?.id ?? 'new'} initial={initial} />;
+}
+
+function AddAddressForm({ initial }: { initial?: Address }) {
+  const navigation = useNavigation<Nav>();
+  const { form, update, errors, canSubmit, saving, removing, error, isEditing, submit, remove } =
+    useAddressForm(initial);
+  const { resolve, loading: locating, permission } = useCurrentLocation();
+  const pickedLocation = useAddressStore((s) => s.pickedLocation);
+  const clearPickedLocation = useAddressStore((s) => s.clearPickedLocation);
+
+  // Haritadan dönen konumu forma yaz, sonra köprüyü temizle.
+  useEffect(() => {
+    if (pickedLocation) {
+      update({
+        fullAddress: pickedLocation.fullAddress,
+        city: pickedLocation.city,
+        district: pickedLocation.district,
+      });
+      clearPickedLocation();
+    }
+  }, [pickedLocation, update, clearPickedLocation]);
+
+  const useCurrentLocationFill = useCallback(async () => {
+    const address = await resolve();
+    if (address) {
+      update({
+        fullAddress: address.fullAddress,
+        city: address.city,
+        district: address.district,
+      });
+    }
+  }, [resolve, update]);
+
+  return (
+    <AddAddressScreen
+      form={form}
+      editing={isEditing}
+      errors={errors}
+      onChange={update}
+      canSubmit={canSubmit}
+      saving={saving}
+      locating={locating}
+      locationDenied={permission === 'denied'}
+      errorText={error}
+      deleting={removing}
+      onUseCurrentLocation={useCurrentLocationFill}
+      onPickOnMap={() =>
+        navigation.navigate(
+          ROUTES.MAP_PICKER,
+          initial?.latitude != null && initial?.longitude != null
+            ? { lat: initial.latitude, lng: initial.longitude }
+            : undefined,
+        )
+      }
+      onSubmit={async () => {
+        const result = await submit();
+        if (result) navigation.goBack();
+      }}
+      onDelete={async () => {
+        const ok = await remove();
+        if (ok) navigation.goBack();
+      }}
+      onClose={() => navigation.goBack()}
+    />
+  );
+}
+
+export function MapPickerContainer() {
+  const navigation = useNavigation<Nav>();
+  const params = useRoute<RouteProp<RootStackParamList, 'MapPicker'>>().params;
+  const initialCoord =
+    params?.lat != null && params?.lng != null
+      ? { latitude: params.lat, longitude: params.lng }
+      : undefined;
+
+  const [coord, setCoord] = useState<LatLng | undefined>(initialCoord);
+  const { resolve, loading } = useReverseGeocode();
+  const setPickedLocation = useAddressStore((s) => s.setPickedLocation);
+
+  const onConfirm = useCallback(async () => {
+    if (!coord) {
+      navigation.goBack();
+      return;
+    }
+    const address = await resolve(coord.latitude, coord.longitude);
+    if (address) setPickedLocation(address);
+    navigation.goBack();
+  }, [coord, resolve, setPickedLocation, navigation]);
+
+  return (
+    <MapPickerScreen
+      initialCoord={initialCoord}
+      resolving={loading}
+      onChange={setCoord}
+      onConfirm={onConfirm}
+      onClose={() => navigation.goBack()}
     />
   );
 }

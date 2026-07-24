@@ -20,6 +20,8 @@ export const ROUTES = {
   // customer
   CREATE: 'Create',
   ADDRESS_PICKER: 'AddressPicker',
+  ADD_ADDRESS: 'AddAddress',
+  MAP_PICKER: 'MapPicker',
   TRACK: 'Track',
   DELIVERY_DETAIL: 'DeliveryDetail',
   RATE: 'Rate',

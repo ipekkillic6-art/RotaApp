@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Crosshair, Map as MapIcon } from 'lucide-react-native';
+import { Crosshair, Map as MapIcon, Plus } from 'lucide-react-native';
 import {
   AddressCard,
   AppHeader,
@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
-import { savedAddresses, addressSuggestions } from '../../mocks/addresses';
+import { savedAddresses as defaultSavedAddresses, addressSuggestions } from '../../mocks/addresses';
 import type { Address } from '../../types';
 
 export interface AddressPickerScreenProps {
@@ -27,10 +27,16 @@ export interface AddressPickerScreenProps {
   query?: string;
   /** Overrides the results list. Empty array renders the no-results state. */
   results?: Address[];
+  /** Kayıtlı adresler — container store'dan geçirir; yoksa mock kullanılır. */
+  savedAddresses?: Address[];
   locationPermission?: 'granted' | 'denied';
   /** Konum alınıyor (GPS + reverse geocode). */
   locating?: boolean;
   onUseCurrentLocation?: () => void;
+  /** Yeni adres formunu aç. */
+  onAddAddress?: () => void;
+  /** Kayıtlı bir adresi düzenle (kart üzerindeki kalem). */
+  onEditAddress?: (address: Address) => void;
   onSelect?: (address: Address) => void;
   onClose?: () => void;
 }
@@ -45,19 +51,28 @@ export function AddressPickerScreen({
   title = 'Adres seç',
   query: initialQuery = '',
   results,
+  savedAddresses = defaultSavedAddresses,
   locationPermission = 'granted',
   locating = false,
   onUseCurrentLocation,
+  onAddAddress,
+  onEditAddress,
   onSelect,
   onClose,
 }: AddressPickerScreenProps) {
   const theme = useTheme();
   const [query, setQuery] = useState(initialQuery);
 
+  // Arama havuzu: kayıtlı adresler + ek öneriler (id'ye göre tekilleştirilir).
+  const searchPool = [
+    ...savedAddresses,
+    ...addressSuggestions.filter((s) => !savedAddresses.some((a) => a.id === s.id)),
+  ];
+
   const list =
     results ??
     (query
-      ? addressSuggestions.filter((a) =>
+      ? searchPool.filter((a) =>
           `${a.title} ${a.fullAddress} ${a.district}`
             .toLocaleLowerCase('tr')
             .includes(query.toLocaleLowerCase('tr')),
@@ -142,6 +157,8 @@ export function AddressPickerScreen({
             )}
             <Divider />
             {shortcut(MapIcon, 'Haritada seç', 'Pini sürükleyerek tam nokta belirle')}
+            <Divider />
+            {shortcut(Plus, 'Yeni adres ekle', 'Elle yeni bir adres tanımla', onAddAddress)}
           </Surface>
 
           <View style={{ gap: theme.spacing.md }}>
@@ -160,7 +177,7 @@ export function AddressPickerScreen({
                   address={address}
                   variant="saved"
                   onPress={() => onSelect?.(address)}
-                  onEdit={() => {}}
+                  onEdit={onEditAddress ? () => onEditAddress(address) : undefined}
                 />
               ))
             )}

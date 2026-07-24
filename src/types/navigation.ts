@@ -49,6 +49,8 @@ export type RootStackParamList = {
   /* customer stack (tab üstüne push'lananlar) */
   Create: { step: CreateStepKey };
   AddressPicker: undefined;
+  AddAddress: { addressId?: string } | undefined;
+  MapPicker: { lat?: number; lng?: number } | undefined;
   Track: { deliveryId: string };
   DeliveryDetail: { deliveryId: string };
   Rate: { deliveryId: string };
