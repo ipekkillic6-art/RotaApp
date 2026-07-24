@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Bell, ChevronRight, HelpCircle, LogOut, MapPin, Shield } from 'lucide-react-native';
+import { Bell, ChevronRight, CreditCard, HelpCircle, LogOut, MapPin, Shield } from 'lucide-react-native';
 import {
   AppHeader,
   Avatar,
@@ -15,7 +15,7 @@ import {
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import type { UserRole } from '../../types';
 
-export type ProfileMenuKey = 'addresses' | 'notifications' | 'privacy' | 'help';
+export type ProfileMenuKey = 'addresses' | 'payment' | 'notifications' | 'privacy' | 'help';
 
 export interface ProfileScreenProps {
   userName: string;
@@ -28,6 +28,7 @@ export interface ProfileScreenProps {
 
 const MENU: Array<{ key: ProfileMenuKey; icon: typeof MapPin; label: string }> = [
   { key: 'addresses', icon: MapPin, label: 'Adreslerim' },
+  { key: 'payment', icon: CreditCard, label: 'Ödeme yöntemlerim' },
   { key: 'notifications', icon: Bell, label: 'Bildirim ayarları' },
   { key: 'privacy', icon: Shield, label: 'Gizlilik ve güvenlik' },
   { key: 'help', icon: HelpCircle, label: 'Yardım ve destek' },

@@ -13,6 +13,8 @@ export const ROUTES = {
   ROLE_SELECT: 'RoleSelect',
   PRIVACY_SECURITY: 'PrivacySecurity',
   HELP_SUPPORT: 'HelpSupport',
+  PAYMENT_METHODS: 'PaymentMethods',
+  ADD_CARD: 'AddCard',
 
   // rol tab host'ları
   CUSTOMER_TABS: 'CustomerTabs',

@@ -11,8 +11,12 @@ import { RoleSelectScreen } from '../../screens/shared/RoleSelectScreen';
 import { ProfileScreen } from '../../screens/shared/ProfileScreen';
 import { PrivacySecurityScreen } from '../../screens/shared/PrivacySecurityScreen';
 import { HelpSupportScreen } from '../../screens/shared/HelpSupportScreen';
+import { PaymentMethodsScreen } from '../../screens/shared/PaymentMethodsScreen';
+import { AddCardScreen } from '../../screens/shared/AddCardScreen';
 import { useAuthStore } from '../../stores/authStore';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { usePaymentStore } from '../../stores/paymentStore';
+import { useCardForm } from '../../hooks/useCardForm';
 import { faqItems } from '../../mocks/support';
 import { SUPPORT } from '../../constants/config';
 import type { RootStackParamList } from '../../types/navigation';
@@ -91,11 +95,68 @@ export function ProfileContainer() {
       role={role ?? 'customer'}
       onSelectItem={(key) => {
         if (key === 'addresses') navigation.navigate(ROUTES.ADDRESS_PICKER);
+        else if (key === 'payment') navigation.navigate(ROUTES.PAYMENT_METHODS);
         else if (key === 'notifications') navigation.navigate(ROUTES.NOTIFICATIONS);
         else if (key === 'privacy') navigation.navigate(ROUTES.PRIVACY_SECURITY);
         else navigation.navigate(ROUTES.HELP_SUPPORT);
       }}
       onLogout={logout}
+    />
+  );
+}
+
+export function PaymentMethodsContainer() {
+  const navigation = useNavigation<Nav>();
+  const cards = usePaymentStore((s) => s.cards);
+  const loading = usePaymentStore((s) => s.loading);
+  const error = usePaymentStore((s) => s.error);
+  const fetchCards = usePaymentStore((s) => s.fetchCards);
+  const removeCard = usePaymentStore((s) => s.removeCard);
+  const setDefault = usePaymentStore((s) => s.setDefault);
+
+  useEffect(() => {
+    fetchCards();
+  }, [fetchCards]);
+
+  return (
+    <PaymentMethodsScreen
+      cards={cards}
+      loading={loading}
+      errorText={error}
+      onAddCard={() => navigation.navigate(ROUTES.ADD_CARD)}
+      onSetDefault={(id) => setDefault(id)}
+      onRemove={(id) =>
+        Alert.alert('Kartı sil', 'Bu kart kayıtlı ödeme yöntemlerinden kaldırılsın mı?', [
+          { text: 'Vazgeç', style: 'cancel' },
+          { text: 'Sil', style: 'destructive', onPress: () => removeCard(id) },
+        ])
+      }
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+export function AddCardContainer() {
+  const navigation = useNavigation<Nav>();
+  const { form, update, errors, canSubmit, brand, makeDefault, setMakeDefault, saving, error, submit } =
+    useCardForm();
+
+  return (
+    <AddCardScreen
+      form={form}
+      brand={brand}
+      errors={errors}
+      canSubmit={canSubmit}
+      saving={saving}
+      makeDefault={makeDefault}
+      errorText={error}
+      onChange={update}
+      onToggleDefault={setMakeDefault}
+      onSubmit={async () => {
+        const created = await submit();
+        if (created) navigation.goBack();
+      }}
+      onClose={() => navigation.goBack()}
     />
   );
 }
