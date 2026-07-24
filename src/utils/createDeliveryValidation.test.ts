@@ -46,6 +46,11 @@ test('price: sorgu sürerken/başarısızken geçilemez', () => {
   assert.equal(canProceedForStep('price', form(), { quoting: false, quoteFailed: true }), false);
 });
 
+test('payment: kart seçilene kadar geçilemez', () => {
+  assert.equal(canProceedForStep('payment', form()), false);
+  assert.equal(canProceedForStep('payment', form({ paymentCardId: 'card-01' })), true);
+});
+
 test('package/schedule/confirm: her zaman geçilebilir', () => {
   assert.equal(canProceedForStep('package', form()), true);
   assert.equal(canProceedForStep('schedule', form()), true);

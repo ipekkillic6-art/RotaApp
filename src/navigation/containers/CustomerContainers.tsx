@@ -98,6 +98,7 @@ export function CreateContainer() {
     reset,
     canProceed,
     savedAddresses,
+    savedCards,
     requestQuote,
     submit,
     price,
@@ -116,7 +117,9 @@ export function CreateContainer() {
       step={step}
       form={form}
       savedAddresses={savedAddresses}
+      savedCards={savedCards}
       onChange={update}
+      onAddCard={() => navigation.navigate(ROUTES.ADD_CARD)}
       canProceed={canProceed(step)}
       price={price}
       priceLoading={quoting}

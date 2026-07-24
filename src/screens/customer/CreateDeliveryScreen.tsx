@@ -1,12 +1,13 @@
 import React from 'react';
 import { View } from 'react-native';
-import { ArrowRight, Clock, Info, User } from 'lucide-react-native';
+import { ArrowRight, Clock, CreditCard, Info, Plus, User } from 'lucide-react-native';
 import {
   AddressCard,
   AddressField,
   Button,
   ChoiceCard,
   DatePickerTrigger,
+  Icon,
   InlineAlert,
   PackageInfoCard,
   PackageTypeSelector,
@@ -17,12 +18,18 @@ import {
   Surface,
   TextField,
   TimePickerTrigger,
+  Touchable,
   Typography,
   useTheme,
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
-import type { Address, PackageTypeId, PriceBreakdown } from '../../types';
+import { brandLabel } from '../../utils/cardValidation';
+import type { Address, PackageTypeId, PaymentCard, PriceBreakdown } from '../../types';
 import type { CreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const cardLine = (c: PaymentCard) =>
+  `•••• ${c.last4} · ${pad2(c.expiryMonth)}/${String(c.expiryYear).slice(-2)}`;
 
 /** The seven steps, in order. Exported so stories can address them by name. */
 export const CREATE_STEPS = [
@@ -32,6 +39,7 @@ export const CREATE_STEPS = [
   { key: 'contacts', title: 'Gönderici ve alıcı', description: 'Kurye kiminle iletişime geçsin?' },
   { key: 'schedule', title: 'Tarih ve saat', description: 'Hemen mi, planlı mı?' },
   { key: 'price', title: 'Fiyat özeti', description: 'Onaylamadan önce ücreti gör.' },
+  { key: 'payment', title: 'Ödeme', description: 'Hangi kartla ödeyeceksin?' },
   { key: 'confirm', title: 'Onay', description: 'Her şey doğru mu?' },
 ] as const;
 
@@ -42,7 +50,9 @@ export interface CreateDeliveryScreenProps {
   /** Form verisi ve seçim callback'i — hook'tan gelir (ekran saf/kontrollü). */
   form: CreateDeliveryForm;
   savedAddresses: Address[];
+  savedCards?: PaymentCard[];
   onChange: (patch: Partial<CreateDeliveryForm>) => void;
+  onAddCard?: () => void;
   /** false iken "Devam et" pasif. */
   canProceed?: boolean;
   /** Sunucu/oluşturma hatası. */
@@ -67,7 +77,9 @@ export function CreateDeliveryScreen({
   step = 'pickup',
   form,
   savedAddresses,
+  savedCards = [],
   onChange,
+  onAddCard,
   canProceed = true,
   errorText,
   price,
@@ -85,6 +97,7 @@ export function CreateDeliveryScreen({
   const pickup = savedAddresses.find((a) => a.id === form.pickupAddressId);
   const dropoff = savedAddresses.find((a) => a.id === form.dropoffAddressId);
   const dropoffOptions = savedAddresses.filter((a) => a.id !== form.pickupAddressId);
+  const selectedCard = savedCards.find((c) => c.id === form.paymentCardId);
 
   const selectPackage = (value: PackageTypeId) => onChange({ packageType: value });
 
@@ -251,6 +264,50 @@ export function CreateDeliveryScreen({
             </>
           )}
 
+          {step === 'payment' && (
+            <>
+              <Typography variant="micro" tone="muted" overline>
+                Kayıtlı kartlar
+              </Typography>
+              {savedCards.length === 0 ? (
+                <InlineAlert
+                  tone="info"
+                  message="Kayıtlı kartın yok. Ödemek için bir kart ekle."
+                />
+              ) : (
+                savedCards.map((card) => (
+                  <ChoiceCard
+                    key={card.id}
+                    label={`${brandLabel(card.brand)}  ${cardLine(card)}`}
+                    hint={card.holderName}
+                    icon={CreditCard}
+                    selected={form.paymentCardId === card.id}
+                    onPress={() => onChange({ paymentCardId: card.id })}
+                  />
+                ))
+              )}
+              <Touchable
+                onPress={onAddCard ?? (() => {})}
+                feedback="opacity"
+                accessibilityLabel="Yeni kart ekle"
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: theme.spacing.sm,
+                    paddingVertical: theme.spacing.sm,
+                  }}
+                >
+                  <Icon icon={Plus} size="sm" tone="accent" />
+                  <Typography variant="caption" tone="accent" weight="semibold">
+                    Yeni kart ekle
+                  </Typography>
+                </View>
+              </Touchable>
+            </>
+          )}
+
           {step === 'confirm' && (
             <>
               {pickup && <AddressCard address={pickup} variant="pickup" />}
@@ -260,9 +317,26 @@ export function CreateDeliveryScreen({
                 description={form.packageNote.trim() || 'Paket açıklaması yok'}
               />
               <PriceSummary price={price ?? undefined} distanceKm={11.4} />
+              {selectedCard && (
+                <Surface tone="elevated" radius="lg" padding="lg" bordered>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+                    <Icon icon={CreditCard} tone="accent" />
+                    <View style={{ flex: 1, gap: 1 }}>
+                      <Typography variant="bodyStrong">{brandLabel(selectedCard.brand)}</Typography>
+                      <Typography variant="micro" tone="muted">
+                        {cardLine(selectedCard)}
+                      </Typography>
+                    </View>
+                  </View>
+                </Surface>
+              )}
               <InlineAlert
                 tone="info"
-                message="Onayladığında ödeme kayıtlı kartından tahsil edilir ve kurye araması başlar."
+                message={
+                  selectedCard
+                    ? `Onayladığında ödeme •••• ${selectedCard.last4} kartından tahsil edilir ve kurye araması başlar.`
+                    : 'Onayladığında ödeme kayıtlı kartından tahsil edilir ve kurye araması başlar.'
+                }
               />
             </>
           )}

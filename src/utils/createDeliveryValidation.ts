@@ -15,6 +15,8 @@ export interface CreateDeliveryForm {
   recipientName: string;
   recipientPhone: string;
   timing: 'now' | 'scheduled';
+  /** Ödemenin alınacağı kayıtlı kart. */
+  paymentCardId: string | null;
 }
 
 export const INITIAL_FORM: CreateDeliveryForm = {
@@ -26,6 +28,7 @@ export const INITIAL_FORM: CreateDeliveryForm = {
   recipientName: '',
   recipientPhone: '',
   timing: 'now',
+  paymentCardId: null,
 };
 
 export interface PriceState {
@@ -52,6 +55,8 @@ export function canProceedForStep(
       );
     case 'price':
       return !price.quoting && !price.quoteFailed;
+    case 'payment':
+      return !!form.paymentCardId;
     default:
       return true;
   }
