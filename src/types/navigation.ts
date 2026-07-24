@@ -60,6 +60,7 @@ export type RootStackParamList = {
 
   /* courier stack */
   JobOffer: undefined;
+  CourierPerformance: undefined;
   CourierTaskDetail: { deliveryId: string };
   Pickup: { deliveryId: string; stage: 'arriving' | 'arrived' };
   OnTheWay: { deliveryId: string };
@@ -70,6 +71,7 @@ export type RootStackParamList = {
   OpsDeliveryDetail: { deliveryId: string };
   OpsAssign: { deliveryId: string };
   OpsAlerts: undefined;
+  OpsAnalytics: undefined;
 };
 
 declare global {

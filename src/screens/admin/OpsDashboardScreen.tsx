@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import {
+  BarChart3,
   Bell,
   CheckCircle2,
   Clock,
@@ -35,6 +36,8 @@ export interface OpsDashboardScreenProps {
   unreadAlerts?: number;
   onOpenDelivery?: (delivery: Delivery) => void;
   onAssignCourier?: (delivery: Delivery) => void;
+  onOpenAlerts?: () => void;
+  onOpenAnalytics?: () => void;
   onTabChange?: (key: string) => void;
 }
 
@@ -56,6 +59,8 @@ export function OpsDashboardScreen({
   unreadAlerts,
   onOpenDelivery,
   onAssignCourier,
+  onOpenAlerts,
+  onOpenAnalytics,
   onTabChange,
 }: OpsDashboardScreenProps) {
   const theme = useTheme();
@@ -71,9 +76,14 @@ export function OpsDashboardScreen({
           subtitle={`Bugün ${metrics.totalToday} teslimat · ${formatPercent(metrics.successRate)} başarı`}
           actions={[
             {
+              icon: BarChart3,
+              accessibilityLabel: 'İstatistikler',
+              onPress: onOpenAnalytics ?? (() => {}),
+            },
+            {
               icon: Bell,
               accessibilityLabel: 'Uyarılar',
-              onPress: () => {},
+              onPress: onOpenAlerts ?? (() => {}),
               badge: unreadAlerts,
             },
           ]}

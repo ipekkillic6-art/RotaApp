@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
+import { countUnread, markAllReadItems } from '../utils/notifications';
 import type { AppNotification, UserRole } from '../types';
 
 interface NotificationState {
@@ -11,8 +12,6 @@ interface NotificationState {
   fetch: (role: UserRole) => Promise<void>;
   markAllRead: () => Promise<void>;
 }
-
-const countUnread = (items: AppNotification[]) => items.filter((n) => !n.read).length;
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   items: [],
@@ -33,7 +32,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   markAllRead: async () => {
     const previous = get().items;
     // İyimser: kritik olmayanları okundu işaretle.
-    const next = previous.map((n) => (n.critical ? n : { ...n, read: true }));
+    const next = markAllReadItems(previous);
     set({ items: next, unread: countUnread(next) });
     try {
       await notificationService.markAllRead();

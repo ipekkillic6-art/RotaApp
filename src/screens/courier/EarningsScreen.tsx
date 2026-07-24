@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Clock, Percent, Star, TrendingUp, XCircle } from 'lucide-react-native';
+import { Award, Clock, Percent, Star, TrendingUp, XCircle } from 'lucide-react-native';
 import {
   AppHeader,
   Avatar,
@@ -31,6 +31,7 @@ export interface EarningsScreenProps {
   byDay: Array<{ label: string; amount: number }>;
   pendingPayout: number;
   totalEarnings: number;
+  onOpenPerformance?: () => void;
   onTabChange?: (key: string) => void;
 }
 
@@ -46,6 +47,7 @@ export function EarningsScreen({
   byDay,
   pendingPayout,
   totalEarnings,
+  onOpenPerformance,
   onTabChange,
 }: EarningsScreenProps) {
   const theme = useTheme();
@@ -55,7 +57,18 @@ export function EarningsScreen({
 
   return (
     <ScreenScaffold
-      header={<AppHeader title="Kazançlarım" />}
+      header={
+        <AppHeader
+          title="Kazançlarım"
+          actions={[
+            {
+              icon: Award,
+              accessibilityLabel: 'Performansım',
+              onPress: onOpenPerformance ?? (() => {}),
+            },
+          ]}
+        />
+      }
       role="courier"
       activeTab="earnings"
       onTabChange={onTabChange}
