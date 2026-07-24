@@ -14,6 +14,8 @@ export interface QuotePayload {
 export interface CreateDeliveryPayload extends QuotePayload {
   packageDescription?: string;
   scheduledAt?: string;
+  /** Ödemenin alınacağı kayıtlı kart. */
+  paymentCardId?: string;
 }
 
 export const deliveryService = {

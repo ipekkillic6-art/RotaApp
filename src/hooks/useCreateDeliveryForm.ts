@@ -1,6 +1,7 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { create as createStore } from 'zustand';
 import { useDeliveryStore } from '../stores/deliveryStore';
+import { usePaymentStore } from '../stores/paymentStore';
 import { savedAddresses } from '../mocks/addresses';
 import {
   INITIAL_FORM,
@@ -34,6 +35,18 @@ export function useCreateDeliveryForm() {
   const reset = useCreateFormStore((s) => s.reset);
   const quote = useDeliveryStore((s) => s.quote);
   const create = useDeliveryStore((s) => s.create);
+  const cards = usePaymentStore((s) => s.cards);
+  const fetchCards = usePaymentStore((s) => s.fetchCards);
+
+  // Kartları yükle ve varsayılan kartı otomatik seç (kullanıcı hiç seçmediyse).
+  useEffect(() => {
+    fetchCards();
+  }, [fetchCards]);
+  useEffect(() => {
+    if (!form.paymentCardId && cards.length > 0) {
+      update({ paymentCardId: (cards.find((c) => c.isDefault) ?? cards[0]).id });
+    }
+  }, [cards, form.paymentCardId, update]);
   const price = useDeliveryStore((s) => s.price);
   const quoting = useDeliveryStore((s) => s.quoting);
   const quoteFailed = useDeliveryStore((s) => s.quoteFailed);
@@ -60,6 +73,7 @@ export function useCreateDeliveryForm() {
       dropoffAddress: dropoff,
       packageType: form.packageType,
       packageDescription: form.packageNote.trim() || undefined,
+      paymentCardId: form.paymentCardId ?? undefined,
     };
   }, [form, findAddress]);
 
@@ -79,6 +93,7 @@ export function useCreateDeliveryForm() {
     canProceed,
     findAddress,
     savedAddresses,
+    savedCards: cards,
     requestQuote,
     submit,
     price,
