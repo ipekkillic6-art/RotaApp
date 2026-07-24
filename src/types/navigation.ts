@@ -40,6 +40,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   RoleSelect: undefined;
+  PrivacySecurity: undefined;
 
   /* rol tab host'ları */
   CustomerTabs: NavigatorScreenParams<CustomerTabParamList> | undefined;

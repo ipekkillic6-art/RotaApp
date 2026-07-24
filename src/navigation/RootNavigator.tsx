@@ -9,6 +9,7 @@ import {
   LoginContainer,
   RegisterContainer,
   RoleSelectContainer,
+  PrivacySecurityContainer,
 } from './containers/SharedContainers';
 import {
   CreateContainer,
@@ -73,6 +74,9 @@ export function RootNavigator() {
           <Stack.Screen name="DeliveryDetail" component={DeliveryDetailContainer} />
           <Stack.Screen name="Rate" component={RateContainer} />
           <Stack.Screen name="Notifications" component={NotificationsContainer} />
+
+          {/* Ortak (her rol) — Profil'den açılır */}
+          <Stack.Screen name="PrivacySecurity" component={PrivacySecurityContainer} />
 
           {/* Courier stack */}
           <Stack.Screen name="JobOffer" component={JobOfferContainer} />
