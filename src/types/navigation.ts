@@ -50,6 +50,7 @@ export type RootStackParamList = {
   Create: { step: CreateStepKey };
   AddressPicker: undefined;
   AddAddress: { addressId?: string } | undefined;
+  MapPicker: { lat?: number; lng?: number } | undefined;
   Track: { deliveryId: string };
   DeliveryDetail: { deliveryId: string };
   Rate: { deliveryId: string };

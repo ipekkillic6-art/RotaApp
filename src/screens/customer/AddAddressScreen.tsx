@@ -1,9 +1,19 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Building2, Crosshair, MapPin, StickyNote, Tag, Trash2, User } from 'lucide-react-native';
+import {
+  Building2,
+  Crosshair,
+  Map as MapIcon,
+  MapPin,
+  StickyNote,
+  Tag,
+  Trash2,
+  User,
+} from 'lucide-react-native';
 import {
   AppHeader,
   Button,
+  Divider,
   Icon,
   InlineAlert,
   PhoneField,
@@ -34,6 +44,8 @@ export interface AddAddressScreenProps {
   errorText?: string;
   deleting?: boolean;
   onUseCurrentLocation?: () => void;
+  /** Haritadan konum seç. */
+  onPickOnMap?: () => void;
   onSubmit?: () => void;
   onDelete?: () => void;
   onClose?: () => void;
@@ -56,11 +68,37 @@ export function AddAddressScreen({
   errorText,
   deleting = false,
   onUseCurrentLocation,
+  onPickOnMap,
   onSubmit,
   onDelete,
   onClose,
 }: AddAddressScreenProps) {
   const theme = useTheme();
+
+  const shortcut = (icon: typeof Crosshair, label: string, hint: string, onPress?: () => void) => (
+    <Touchable onPress={onPress ?? (() => {})} feedback="opacity" accessibilityLabel={label}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.action.secondary,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon icon={icon} size="md" tone="accent" />
+        </View>
+        <View style={{ flex: 1, gap: 1 }}>
+          <Typography variant="bodyStrong">{label}</Typography>
+          <Typography variant="micro" tone="muted">
+            {hint}
+          </Typography>
+        </View>
+      </View>
+    </Touchable>
+  );
 
   return (
     <ScreenScaffold
@@ -79,39 +117,23 @@ export function AddAddressScreen({
           {errorText && <InlineAlert tone="error" message={errorText} />}
 
           <Surface tone="elevated" radius="lg" padding="lg" bordered>
-            <Touchable
-              onPress={onUseCurrentLocation ?? (() => {})}
-              feedback="opacity"
-              accessibilityLabel="Güncel konumu kullan"
-              accessibilityHint="Konumundan adres alanlarını otomatik doldurur"
-            >
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: theme.colors.action.secondary,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Icon icon={Crosshair} size="md" tone="accent" />
-                </View>
-                <View style={{ flex: 1, gap: 1 }}>
-                  <Typography variant="bodyStrong">Güncel konumu kullan</Typography>
-                  <Typography variant="micro" tone="muted">
-                    {locating
-                      ? 'Konum alınıyor…'
-                      : locationDenied
-                        ? 'Konum izni verilmedi — elle doldurabilirsin'
-                        : 'Adres alanlarını GPS ile otomatik doldur'}
-                  </Typography>
-                </View>
-              </View>
-            </Touchable>
+            {shortcut(
+              Crosshair,
+              'Güncel konumu kullan',
+              locating
+                ? 'Konum alınıyor…'
+                : locationDenied
+                  ? 'Konum izni verilmedi — elle doldurabilirsin'
+                  : 'Adres alanlarını GPS ile otomatik doldur',
+              onUseCurrentLocation,
+            )}
+            <Divider />
+            {shortcut(
+              MapIcon,
+              'Haritada seç',
+              'Pini teslimat noktasına getir',
+              onPickOnMap,
+            )}
           </Surface>
 
           <TextField

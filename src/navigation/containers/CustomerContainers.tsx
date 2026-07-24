@@ -6,6 +6,7 @@ import { CustomerHomeScreen } from '../../screens/customer/CustomerHomeScreen';
 import { CreateDeliveryScreen, CREATE_STEPS } from '../../screens/customer/CreateDeliveryScreen';
 import { AddressPickerScreen } from '../../screens/customer/AddressPickerScreen';
 import { AddAddressScreen } from '../../screens/customer/AddAddressScreen';
+import { MapPickerScreen } from '../../screens/customer/MapPickerScreen';
 import { TrackDeliveryScreen } from '../../screens/customer/TrackDeliveryScreen';
 import { DeliveryHistoryScreen } from '../../screens/customer/DeliveryHistoryScreen';
 import { DeliveryDetailScreen } from '../../screens/customer/DeliveryDetailScreen';
@@ -18,8 +19,10 @@ import { useAuthStore } from '../../stores/authStore';
 import { useAddressStore } from '../../stores/addressStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
+import { useReverseGeocode } from '../../hooks/useReverseGeocode';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { useAddressForm } from '../../hooks/useAddressForm';
+import type { LatLng } from '../../design-system';
 import { recentAddresses } from '../../mocks/addresses';
 import type { Address, Delivery } from '../../types';
 import type { RootStackParamList } from '../../types/navigation';
@@ -196,6 +199,20 @@ function AddAddressForm({ initial }: { initial?: Address }) {
   const { form, update, errors, canSubmit, saving, removing, error, isEditing, submit, remove } =
     useAddressForm(initial);
   const { resolve, loading: locating, permission } = useCurrentLocation();
+  const pickedLocation = useAddressStore((s) => s.pickedLocation);
+  const clearPickedLocation = useAddressStore((s) => s.clearPickedLocation);
+
+  // Haritadan dönen konumu forma yaz, sonra köprüyü temizle.
+  useEffect(() => {
+    if (pickedLocation) {
+      update({
+        fullAddress: pickedLocation.fullAddress,
+        city: pickedLocation.city,
+        district: pickedLocation.district,
+      });
+      clearPickedLocation();
+    }
+  }, [pickedLocation, update, clearPickedLocation]);
 
   const useCurrentLocationFill = useCallback(async () => {
     const address = await resolve();
@@ -221,6 +238,14 @@ function AddAddressForm({ initial }: { initial?: Address }) {
       errorText={error}
       deleting={removing}
       onUseCurrentLocation={useCurrentLocationFill}
+      onPickOnMap={() =>
+        navigation.navigate(
+          ROUTES.MAP_PICKER,
+          initial?.latitude != null && initial?.longitude != null
+            ? { lat: initial.latitude, lng: initial.longitude }
+            : undefined,
+        )
+      }
       onSubmit={async () => {
         const result = await submit();
         if (result) navigation.goBack();
@@ -229,6 +254,39 @@ function AddAddressForm({ initial }: { initial?: Address }) {
         const ok = await remove();
         if (ok) navigation.goBack();
       }}
+      onClose={() => navigation.goBack()}
+    />
+  );
+}
+
+export function MapPickerContainer() {
+  const navigation = useNavigation<Nav>();
+  const params = useRoute<RouteProp<RootStackParamList, 'MapPicker'>>().params;
+  const initialCoord =
+    params?.lat != null && params?.lng != null
+      ? { latitude: params.lat, longitude: params.lng }
+      : undefined;
+
+  const [coord, setCoord] = useState<LatLng | undefined>(initialCoord);
+  const { resolve, loading } = useReverseGeocode();
+  const setPickedLocation = useAddressStore((s) => s.setPickedLocation);
+
+  const onConfirm = useCallback(async () => {
+    if (!coord) {
+      navigation.goBack();
+      return;
+    }
+    const address = await resolve(coord.latitude, coord.longitude);
+    if (address) setPickedLocation(address);
+    navigation.goBack();
+  }, [coord, resolve, setPickedLocation, navigation]);
+
+  return (
+    <MapPickerScreen
+      initialCoord={initialCoord}
+      resolving={loading}
+      onChange={setCoord}
+      onConfirm={onConfirm}
       onClose={() => navigation.goBack()}
     />
   );

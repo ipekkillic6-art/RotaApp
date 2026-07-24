@@ -14,6 +14,7 @@ import {
   CreateContainer,
   AddressPickerContainer,
   AddAddressContainer,
+  MapPickerContainer,
   TrackContainer,
   DeliveryDetailContainer,
   RateContainer,
@@ -67,6 +68,7 @@ export function RootNavigator() {
           <Stack.Screen name="Create" component={CreateContainer} />
           <Stack.Screen name="AddressPicker" component={AddressPickerContainer} />
           <Stack.Screen name="AddAddress" component={AddAddressContainer} />
+          <Stack.Screen name="MapPicker" component={MapPickerContainer} />
           <Stack.Screen name="Track" component={TrackContainer} />
           <Stack.Screen name="DeliveryDetail" component={DeliveryDetailContainer} />
           <Stack.Screen name="Rate" component={RateContainer} />

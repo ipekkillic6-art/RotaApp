@@ -8,11 +8,15 @@ interface AddressState {
   saving: boolean;
   removing: boolean;
   error?: string;
+  /** Haritadan seçilen konum — form ekranı okuyup temizler (ekranlar arası köprü). */
+  pickedLocation?: Address;
 
   fetchSaved: () => Promise<void>;
   add: (payload: CreateAddressPayload) => Promise<Address | null>;
   update: (id: string, payload: CreateAddressPayload) => Promise<Address | null>;
   remove: (id: string) => Promise<boolean>;
+  setPickedLocation: (address: Address) => void;
+  clearPickedLocation: () => void;
 }
 
 export const useAddressStore = create<AddressState>((set) => ({
@@ -21,6 +25,10 @@ export const useAddressStore = create<AddressState>((set) => ({
   saving: false,
   removing: false,
   error: undefined,
+  pickedLocation: undefined,
+
+  setPickedLocation: (address) => set({ pickedLocation: address }),
+  clearPickedLocation: () => set({ pickedLocation: undefined }),
 
   fetchSaved: async () => {
     set({ loading: true, error: undefined });
