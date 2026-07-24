@@ -195,3 +195,10 @@ export interface PrivacySettings {
 }
 
 export type PrivacySettingKey = keyof PrivacySettings;
+
+/** Sık sorulan soru — Yardım ve destek ekranı. */
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}

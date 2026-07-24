@@ -13,3 +13,14 @@ export const API_CONFIG = {
 
 /** Mock modunda sahte ağ gecikmesi (ms) — loading durumları görünsün diye. */
 export const MOCK_LATENCY_MS = 350;
+
+/** Yardım ve destek iletişim kanalları + yasal bağlantılar. */
+export const SUPPORT = {
+  email: 'destek@rota.app',
+  /** Ekranda gösterilen okunur biçim. */
+  phone: '0850 000 00 00',
+  /** tel: bağlantısı için ham numara. */
+  phoneDial: '+908500000000',
+  termsUrl: 'https://rota.app/kullanim-kosullari',
+  privacyUrl: 'https://rota.app/gizlilik-politikasi',
+} as const;

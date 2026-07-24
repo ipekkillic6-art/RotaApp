@@ -12,6 +12,7 @@ export const ROUTES = {
   REGISTER: 'Register',
   ROLE_SELECT: 'RoleSelect',
   PRIVACY_SECURITY: 'PrivacySecurity',
+  HELP_SUPPORT: 'HelpSupport',
 
   // rol tab host'ları
   CUSTOMER_TABS: 'CustomerTabs',

@@ -4,3 +4,4 @@ export * from './deliveries';
 export * from './notifications';
 export * from './analytics';
 export * from './settings';
+export * from './support';
