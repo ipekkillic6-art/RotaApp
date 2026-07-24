@@ -179,3 +179,26 @@ export interface CustomerReview {
   tags: string[];
   createdAt: string;
 }
+
+/** Gizlilik ve güvenlik tercihleri — Profil > Gizlilik ve güvenlik. */
+export interface PrivacySettings {
+  /** Uygulama açılışında biyometrik (Face ID / parmak izi) doğrulama. */
+  biometricLogin: boolean;
+  /** Girişte SMS ile ek kod. */
+  twoFactor: boolean;
+  /** Teslimat sırasında konumu kuryeyle paylaş. */
+  locationSharing: boolean;
+  /** Uygulamayı iyileştirmek için anonim kullanım analizi. */
+  usageAnalytics: boolean;
+  /** İlgi alanına göre kampanya ve öneriler. */
+  personalizedOffers: boolean;
+}
+
+export type PrivacySettingKey = keyof PrivacySettings;
+
+/** Sık sorulan soru — Yardım ve destek ekranı. */
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}

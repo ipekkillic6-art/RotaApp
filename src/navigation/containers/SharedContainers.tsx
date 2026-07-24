@@ -1,4 +1,6 @@
-import { Alert } from 'react-native';
+import { useEffect } from 'react';
+import { Alert, Linking } from 'react-native';
+import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -7,7 +9,12 @@ import { OnboardingScreen } from '../../screens/shared/OnboardingScreen';
 import { LoginScreen, RegisterScreen } from '../../screens/shared/AuthScreens';
 import { RoleSelectScreen } from '../../screens/shared/RoleSelectScreen';
 import { ProfileScreen } from '../../screens/shared/ProfileScreen';
+import { PrivacySecurityScreen } from '../../screens/shared/PrivacySecurityScreen';
+import { HelpSupportScreen } from '../../screens/shared/HelpSupportScreen';
 import { useAuthStore } from '../../stores/authStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { faqItems } from '../../mocks/support';
+import { SUPPORT } from '../../constants/config';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
 
@@ -85,11 +92,87 @@ export function ProfileContainer() {
       onSelectItem={(key) => {
         if (key === 'addresses') navigation.navigate(ROUTES.ADDRESS_PICKER);
         else if (key === 'notifications') navigation.navigate(ROUTES.NOTIFICATIONS);
-        else if (key === 'privacy')
-          Alert.alert('Gizlilik ve güvenlik', 'Hesap gizliliği ayarları yakında.', [{ text: 'Tamam' }]);
-        else Alert.alert('Yardım ve destek', 'destek@rota.app · 0850 000 00 00', [{ text: 'Tamam' }]);
+        else if (key === 'privacy') navigation.navigate(ROUTES.PRIVACY_SECURITY);
+        else navigation.navigate(ROUTES.HELP_SUPPORT);
       }}
       onLogout={logout}
+    />
+  );
+}
+
+export function HelpSupportContainer() {
+  const navigation = useNavigation<Nav>();
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+
+  // Bağlantı açılamazsa (ör. simülatörde mail yoksa) kullanıcıya bilgi ver.
+  const open = (url: string, fallback: string) =>
+    Linking.openURL(url).catch(() => Alert.alert('Açılamadı', fallback, [{ text: 'Tamam' }]));
+
+  return (
+    <HelpSupportScreen
+      faqs={faqItems}
+      email={SUPPORT.email}
+      phone={SUPPORT.phone}
+      appVersion={appVersion}
+      onEmail={() => open(`mailto:${SUPPORT.email}`, SUPPORT.email)}
+      onCall={() => open(`tel:${SUPPORT.phoneDial}`, SUPPORT.phone)}
+      onLiveChat={() =>
+        Alert.alert('Canlı destek', 'Hafta içi 09:00 – 18:00 arası buradayız.', [{ text: 'Tamam' }])
+      }
+      onTerms={() => open(SUPPORT.termsUrl, SUPPORT.termsUrl)}
+      onPrivacyPolicy={() => open(SUPPORT.privacyUrl, SUPPORT.privacyUrl)}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+export function PrivacySecurityContainer() {
+  const navigation = useNavigation<Nav>();
+  const privacy = useSettingsStore((s) => s.privacy);
+  const loading = useSettingsStore((s) => s.loading);
+  const error = useSettingsStore((s) => s.error);
+  const fetchPrivacy = useSettingsStore((s) => s.fetchPrivacy);
+  const setPrivacy = useSettingsStore((s) => s.setPrivacy);
+  const logout = useAuthStore((s) => s.logout);
+
+  useEffect(() => {
+    fetchPrivacy();
+  }, [fetchPrivacy]);
+
+  return (
+    <PrivacySecurityScreen
+      settings={privacy ?? undefined}
+      loading={loading}
+      errorText={error}
+      onToggle={(key, value) => setPrivacy(key, value)}
+      onChangePassword={() =>
+        Alert.alert(
+          'Şifreyi değiştir',
+          'Kayıtlı e-postana bir sıfırlama bağlantısı göndereceğiz.',
+          [{ text: 'Vazgeç', style: 'cancel' }, { text: 'Bağlantı gönder' }],
+        )
+      }
+      onLogoutAllDevices={() =>
+        Alert.alert(
+          'Tüm cihazlardan çıkış',
+          'Bu hesabın açık olduğu tüm cihazlarda oturum kapatılacak.',
+          [
+            { text: 'Vazgeç', style: 'cancel' },
+            { text: 'Çıkış yap', style: 'destructive', onPress: () => logout() },
+          ],
+        )
+      }
+      onDeleteAccount={() =>
+        Alert.alert(
+          'Hesabımı sil',
+          'Hesabın ve tüm teslimat geçmişin kalıcı olarak silinir. Bu işlem geri alınamaz.',
+          [
+            { text: 'Vazgeç', style: 'cancel' },
+            { text: 'Hesabı sil', style: 'destructive', onPress: () => logout() },
+          ],
+        )
+      }
+      onBack={() => navigation.goBack()}
     />
   );
 }
