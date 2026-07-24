@@ -6,16 +6,20 @@ interface AddressState {
   saved: Address[];
   loading: boolean;
   saving: boolean;
+  removing: boolean;
   error?: string;
 
   fetchSaved: () => Promise<void>;
   add: (payload: CreateAddressPayload) => Promise<Address | null>;
+  update: (id: string, payload: CreateAddressPayload) => Promise<Address | null>;
+  remove: (id: string) => Promise<boolean>;
 }
 
 export const useAddressStore = create<AddressState>((set) => ({
   saved: [],
   loading: false,
   saving: false,
+  removing: false,
   error: undefined,
 
   fetchSaved: async () => {
@@ -40,6 +44,30 @@ export const useAddressStore = create<AddressState>((set) => ({
     } catch (e) {
       set({ saving: false, error: e instanceof Error ? e.message : 'Adres kaydedilemedi' });
       return null;
+    }
+  },
+
+  update: async (id, payload) => {
+    set({ saving: true, error: undefined });
+    try {
+      const updated = await addressService.update(id, payload);
+      set((s) => ({ saving: false, saved: s.saved.map((a) => (a.id === id ? updated : a)) }));
+      return updated;
+    } catch (e) {
+      set({ saving: false, error: e instanceof Error ? e.message : 'Adres güncellenemedi' });
+      return null;
+    }
+  },
+
+  remove: async (id) => {
+    set({ removing: true, error: undefined });
+    try {
+      await addressService.remove(id);
+      set((s) => ({ removing: false, saved: s.saved.filter((a) => a.id !== id) }));
+      return true;
+    } catch (e) {
+      set({ removing: false, error: e instanceof Error ? e.message : 'Adres silinemedi' });
+      return false;
     }
   },
 }));

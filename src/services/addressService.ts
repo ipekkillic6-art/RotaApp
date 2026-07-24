@@ -49,4 +49,27 @@ export const addressService = {
         return created;
       },
     }),
+
+  /** Mevcut adresi güncelle. Mock: kayıtlı listede yerinde değiştirir. */
+  update: (id: string, payload: CreateAddressPayload, signal?: AbortSignal) =>
+    api.put<Address>(`/addresses/${id}`, {
+      body: payload,
+      signal,
+      mock: () => {
+        const updated: Address = { id, ...payload };
+        const i = savedAddresses.findIndex((a) => a.id === id);
+        if (i >= 0) savedAddresses[i] = updated;
+        return updated;
+      },
+    }),
+
+  /** Adresi sil. Mock: kayıtlı listeden çıkarır. */
+  remove: (id: string, signal?: AbortSignal) =>
+    api.delete<void>(`/addresses/${id}`, {
+      signal,
+      mock: () => {
+        const i = savedAddresses.findIndex((a) => a.id === id);
+        if (i >= 0) savedAddresses.splice(i, 1);
+      },
+    }),
 };

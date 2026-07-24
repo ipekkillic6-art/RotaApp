@@ -1,13 +1,16 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Building2, MapPin, StickyNote, Tag, User } from 'lucide-react-native';
+import { Building2, Crosshair, MapPin, StickyNote, Tag, Trash2, User } from 'lucide-react-native';
 import {
   AppHeader,
   Button,
+  Icon,
   InlineAlert,
   PhoneField,
   ScrollContainer,
+  Surface,
   TextField,
+  Touchable,
   Typography,
   useTheme,
 } from '../../design-system';
@@ -16,40 +19,55 @@ import type { AddressForm, AddressFieldKey } from '../../utils/addressValidation
 
 export interface AddAddressScreenProps {
   form: AddressForm;
+  /** Düzenleme modu: başlık ve buton metni değişir, silme görünür. */
+  editing?: boolean;
   /** Alan bazlı doğrulama mesajları — hook'tan gelir (ekran saf). */
   errors?: Partial<Record<AddressFieldKey, string>>;
   onChange: (patch: Partial<AddressForm>) => void;
-  /** false iken "Adresi kaydet" pasif. */
+  /** false iken kaydet butonu pasif. */
   canSubmit?: boolean;
   saving?: boolean;
+  /** Konum alınıyor (GPS + reverse geocode). */
+  locating?: boolean;
+  locationDenied?: boolean;
   /** Sunucu/kaydetme hatası. */
   errorText?: string;
+  deleting?: boolean;
+  onUseCurrentLocation?: () => void;
   onSubmit?: () => void;
+  onDelete?: () => void;
   onClose?: () => void;
 }
 
 /**
- * Yeni adres formu. Zorunlu alanlar üstte (başlık + açık adres + ilçe/şehir);
- * iletişim bilgileri opsiyonel ve altta, çünkü kurye ancak teslimatta gerekir.
+ * Yeni adres / adres düzenleme formu. Zorunlu alanlar üstte (başlık + açık
+ * adres + ilçe/şehir); iletişim opsiyonel ve altta. "Güncel konumu kullan"
+ * en üstte hızlı yol; silme yalnızca düzenleme modunda ve en altta (yıkıcı).
  */
 export function AddAddressScreen({
   form,
+  editing = false,
   errors = {},
   onChange,
   canSubmit = true,
   saving = false,
+  locating = false,
+  locationDenied = false,
   errorText,
+  deleting = false,
+  onUseCurrentLocation,
   onSubmit,
+  onDelete,
   onClose,
 }: AddAddressScreenProps) {
   const theme = useTheme();
 
   return (
     <ScreenScaffold
-      header={<AppHeader title="Yeni adres" onBack={onClose} />}
+      header={<AppHeader title={editing ? 'Adresi düzenle' : 'Yeni adres'} onBack={onClose} />}
       footer={
         <Button
-          label="Adresi kaydet"
+          label={editing ? 'Değişiklikleri kaydet' : 'Adresi kaydet'}
           onPress={onSubmit}
           loading={saving}
           disabled={!canSubmit || saving}
@@ -59,6 +77,42 @@ export function AddAddressScreen({
       <ScrollContainer keyboardAware>
         <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.xs }}>
           {errorText && <InlineAlert tone="error" message={errorText} />}
+
+          <Surface tone="elevated" radius="lg" padding="lg" bordered>
+            <Touchable
+              onPress={onUseCurrentLocation ?? (() => {})}
+              feedback="opacity"
+              accessibilityLabel="Güncel konumu kullan"
+              accessibilityHint="Konumundan adres alanlarını otomatik doldurur"
+            >
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: theme.colors.action.secondary,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon icon={Crosshair} size="md" tone="accent" />
+                </View>
+                <View style={{ flex: 1, gap: 1 }}>
+                  <Typography variant="bodyStrong">Güncel konumu kullan</Typography>
+                  <Typography variant="micro" tone="muted">
+                    {locating
+                      ? 'Konum alınıyor…'
+                      : locationDenied
+                        ? 'Konum izni verilmedi — elle doldurabilirsin'
+                        : 'Adres alanlarını GPS ile otomatik doldur'}
+                  </Typography>
+                </View>
+              </View>
+            </Touchable>
+          </Surface>
 
           <TextField
             label="Başlık"
@@ -131,6 +185,18 @@ export function AddAddressScreen({
             multiline
             rows={2}
           />
+
+          {editing && (
+            <Button
+              label="Adresi sil"
+              variant="danger"
+              icon={Trash2}
+              onPress={onDelete}
+              loading={deleting}
+              disabled={deleting || saving}
+              accessibilityHint="Bu işlem geri alınamaz"
+            />
+          )}
         </View>
       </ScrollContainer>
     </ScreenScaffold>

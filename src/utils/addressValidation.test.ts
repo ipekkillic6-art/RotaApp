@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   INITIAL_ADDRESS_FORM,
   addressErrors,
+  addressToForm,
   canSubmitAddress,
   toCreateAddressPayload,
   validateAddressField,
@@ -73,4 +74,22 @@ test('payload trim uygular ve boş opsiyonelleri undefined yapar', () => {
   assert.equal(payload.contactName, undefined);
   assert.equal(payload.note, 'kapıda bırak');
   assert.equal(payload.city, 'İstanbul');
+});
+
+test('addressToForm mevcut adresi forma çevirir, eksik opsiyonelleri boş yapar', () => {
+  const editForm = addressToForm({
+    id: 'adr-99',
+    title: 'Depo',
+    fullAddress: 'Orhanlı Mah. Gebze Yolu Cad. No:214',
+    city: 'İstanbul',
+    district: 'Tuzla',
+    // contactName / contactPhone / note yok → '' olmalı
+  });
+  assert.equal(editForm.title, 'Depo');
+  assert.equal(editForm.district, 'Tuzla');
+  assert.equal(editForm.contactName, '');
+  assert.equal(editForm.contactPhone, '');
+  assert.equal(editForm.note, '');
+  // Düzenlemeye açılan mevcut adres gönderilebilir olmalı.
+  assert.equal(canSubmitAddress(editForm), true);
 });

@@ -35,6 +35,8 @@ export interface AddressPickerScreenProps {
   onUseCurrentLocation?: () => void;
   /** Yeni adres formunu aç. */
   onAddAddress?: () => void;
+  /** Kayıtlı bir adresi düzenle (kart üzerindeki kalem). */
+  onEditAddress?: (address: Address) => void;
   onSelect?: (address: Address) => void;
   onClose?: () => void;
 }
@@ -54,6 +56,7 @@ export function AddressPickerScreen({
   locating = false,
   onUseCurrentLocation,
   onAddAddress,
+  onEditAddress,
   onSelect,
   onClose,
 }: AddressPickerScreenProps) {
@@ -174,7 +177,7 @@ export function AddressPickerScreen({
                   address={address}
                   variant="saved"
                   onPress={() => onSelect?.(address)}
-                  onEdit={() => {}}
+                  onEdit={onEditAddress ? () => onEditAddress(address) : undefined}
                 />
               ))
             )}

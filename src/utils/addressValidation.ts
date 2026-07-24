@@ -1,4 +1,5 @@
 import type { CreateAddressPayload } from '../services/addressService';
+import type { Address } from '../types';
 
 /**
  * Adres formu için saf doğrulama.
@@ -70,6 +71,19 @@ export function addressErrors(form: AddressForm): Partial<Record<AddressFieldKey
 
 export function canSubmitAddress(form: AddressForm): boolean {
   return Object.keys(addressErrors(form)).length === 0;
+}
+
+/** Mevcut adres → form (düzenleme ekranını ön-doldurmak için). */
+export function addressToForm(address: Address): AddressForm {
+  return {
+    title: address.title,
+    fullAddress: address.fullAddress,
+    city: address.city,
+    district: address.district,
+    contactName: address.contactName ?? '',
+    contactPhone: address.contactPhone ?? '',
+    note: address.note ?? '',
+  };
 }
 
 /** Form → API gövdesi; boş opsiyonel alanlar `undefined` olur. */

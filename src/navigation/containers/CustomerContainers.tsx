@@ -21,7 +21,7 @@ import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { useAddressForm } from '../../hooks/useAddressForm';
 import { recentAddresses } from '../../mocks/addresses';
-import type { Delivery } from '../../types';
+import type { Address, Delivery } from '../../types';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
 import { byId, keyFor } from '../wiring';
@@ -167,6 +167,7 @@ export function AddressPickerContainer() {
       locating={loading}
       onUseCurrentLocation={useCurrent}
       onAddAddress={() => navigation.navigate(ROUTES.ADD_ADDRESS)}
+      onEditAddress={(a) => navigation.navigate(ROUTES.ADD_ADDRESS, { addressId: a.id })}
       onClose={() => navigation.goBack()}
       onSelect={() => navigation.goBack()}
     />
@@ -174,20 +175,59 @@ export function AddressPickerContainer() {
 }
 
 export function AddAddressContainer() {
+  const params = useRoute<RouteProp<RootStackParamList, 'AddAddress'>>().params;
+  const addressId = params?.addressId;
+  const saved = useAddressStore((s) => s.saved);
+  const fetchSaved = useAddressStore((s) => s.fetchSaved);
+
+  // Düzenlemeye derin bağlantıyla girilirse liste boşsa yükle.
+  useEffect(() => {
+    if (addressId && saved.length === 0) fetchSaved();
+  }, [addressId, saved.length, fetchSaved]);
+
+  const initial = addressId ? saved.find((a) => a.id === addressId) : undefined;
+
+  // key: initial geç yüklenirse formu doğru veriyle yeniden kur (state init'i).
+  return <AddAddressForm key={initial?.id ?? 'new'} initial={initial} />;
+}
+
+function AddAddressForm({ initial }: { initial?: Address }) {
   const navigation = useNavigation<Nav>();
-  const { form, update, errors, canSubmit, saving, error, submit } = useAddressForm();
+  const { form, update, errors, canSubmit, saving, removing, error, isEditing, submit, remove } =
+    useAddressForm(initial);
+  const { resolve, loading: locating, permission } = useCurrentLocation();
+
+  const useCurrentLocationFill = useCallback(async () => {
+    const address = await resolve();
+    if (address) {
+      update({
+        fullAddress: address.fullAddress,
+        city: address.city,
+        district: address.district,
+      });
+    }
+  }, [resolve, update]);
 
   return (
     <AddAddressScreen
       form={form}
+      editing={isEditing}
       errors={errors}
       onChange={update}
       canSubmit={canSubmit}
       saving={saving}
+      locating={locating}
+      locationDenied={permission === 'denied'}
       errorText={error}
+      deleting={removing}
+      onUseCurrentLocation={useCurrentLocationFill}
       onSubmit={async () => {
-        const created = await submit();
-        if (created) navigation.goBack();
+        const result = await submit();
+        if (result) navigation.goBack();
+      }}
+      onDelete={async () => {
+        const ok = await remove();
+        if (ok) navigation.goBack();
       }}
       onClose={() => navigation.goBack()}
     />
