@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CustomerHomeScreen } from '../../screens/customer/CustomerHomeScreen';
 import { CreateDeliveryScreen, CREATE_STEPS } from '../../screens/customer/CreateDeliveryScreen';
 import { AddressPickerScreen } from '../../screens/customer/AddressPickerScreen';
+import { AddAddressScreen } from '../../screens/customer/AddAddressScreen';
 import { TrackDeliveryScreen } from '../../screens/customer/TrackDeliveryScreen';
 import { DeliveryHistoryScreen } from '../../screens/customer/DeliveryHistoryScreen';
 import { DeliveryDetailScreen } from '../../screens/customer/DeliveryDetailScreen';
@@ -14,9 +15,11 @@ import { NotificationsScreen } from '../../screens/customer/NotificationsScreen'
 import { useDeliveryStore } from '../../stores/deliveryStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useAddressStore } from '../../stores/addressStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
+import { useAddressForm } from '../../hooks/useAddressForm';
 import { recentAddresses } from '../../mocks/addresses';
 import type { Delivery } from '../../types';
 import type { RootStackParamList } from '../../types/navigation';
@@ -143,6 +146,13 @@ export function CreateContainer() {
 export function AddressPickerContainer() {
   const navigation = useNavigation<Nav>();
   const { resolve, loading, permission } = useCurrentLocation();
+  const saved = useAddressStore((s) => s.saved);
+  const fetchSaved = useAddressStore((s) => s.fetchSaved);
+
+  // Kayıtlı adresleri yükle — yeni eklenen adres de burada görünür.
+  useEffect(() => {
+    fetchSaved();
+  }, [fetchSaved]);
 
   const useCurrent = useCallback(async () => {
     const address = await resolve();
@@ -152,11 +162,34 @@ export function AddressPickerContainer() {
 
   return (
     <AddressPickerScreen
+      savedAddresses={saved.length ? saved : undefined}
       locationPermission={permission === 'denied' ? 'denied' : 'granted'}
       locating={loading}
       onUseCurrentLocation={useCurrent}
+      onAddAddress={() => navigation.navigate(ROUTES.ADD_ADDRESS)}
       onClose={() => navigation.goBack()}
       onSelect={() => navigation.goBack()}
+    />
+  );
+}
+
+export function AddAddressContainer() {
+  const navigation = useNavigation<Nav>();
+  const { form, update, errors, canSubmit, saving, error, submit } = useAddressForm();
+
+  return (
+    <AddAddressScreen
+      form={form}
+      errors={errors}
+      onChange={update}
+      canSubmit={canSubmit}
+      saving={saving}
+      errorText={error}
+      onSubmit={async () => {
+        const created = await submit();
+        if (created) navigation.goBack();
+      }}
+      onClose={() => navigation.goBack()}
     />
   );
 }
