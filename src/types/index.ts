@@ -202,3 +202,16 @@ export interface FaqItem {
   question: string;
   answer: string;
 }
+
+export type CardBrand = 'visa' | 'mastercard' | 'amex' | 'troy' | 'unknown';
+
+/** Kayıtlı ödeme kartı. Güvenlik için yalnızca son 4 hane + marka saklanır. */
+export interface PaymentCard {
+  id: string;
+  brand: CardBrand;
+  last4: string;
+  expiryMonth: number;
+  expiryYear: number;
+  holderName: string;
+  isDefault: boolean;
+}
