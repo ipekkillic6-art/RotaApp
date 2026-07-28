@@ -2,7 +2,7 @@ import React, { useId } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { AlertCircle, CheckCircle2 } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Typography } from '../../foundations/Typography';
 
@@ -63,7 +63,7 @@ export function FieldShell({
   style,
 }: FieldShellProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   const message = errorText ?? successText ?? helperText;
   const status: FieldStatus = errorText ? 'error' : successText ? 'success' : 'default';

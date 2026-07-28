@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Lock, Mail, Route, User } from 'lucide-react-native';
 import {
   AppHeader,
@@ -15,6 +15,8 @@ import {
   TextField,
   Typography,
   useTheme,
+  useThemedStyles,
+  type Theme,
 } from '../../design-system';
 
 export interface LoginScreenProps {
@@ -25,6 +27,27 @@ export interface LoginScreenProps {
   onForgotPassword?: () => void;
   onRegister?: () => void;
 }
+
+const makeLoginStyles = (theme: Theme) =>
+  StyleSheet.create({
+    header: {
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingVertical: theme.spacing['3xl'],
+    },
+    logo: {
+      width: 56,
+      height: 56,
+      borderRadius: theme.radius.xl,
+      backgroundColor: theme.colors.action.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    form: { gap: theme.spacing.lg },
+    forgotRow: { alignItems: 'flex-end' },
+    dividerRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+    dividerLine: { flex: 1 },
+  });
 
 /**
  * Login.
@@ -41,24 +64,26 @@ export function LoginScreen({
   onRegister,
 }: LoginScreenProps) {
   const theme = useTheme();
+  const styles = useThemedStyles(makeLoginStyles);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+
+  // Button memoize edilmiş; onPress her tuşta yeni referans alırsa memo boşa
+  // çıkar ve buton her karakterde yeniden render olur. Güncel değerleri bir
+  // ref'te tutup callback'i kalıcı olarak sabitliyoruz.
+  const latest = useRef({ identifier, password, onSubmit });
+  latest.current = { identifier, password, onSubmit };
+  const submit = useCallback(() => {
+    const current = latest.current;
+    current.onSubmit?.({ identifier: current.identifier, password: current.password });
+  }, []);
 
   return (
     <ScreenContainer>
       <SafeAreaContainer>
         <ScrollContainer keyboardAware>
-          <View style={{ alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing['3xl'] }}>
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: theme.radius.xl,
-                backgroundColor: theme.colors.action.primary,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+          <View style={styles.header}>
+            <View style={styles.logo}>
               <Icon icon={Route} size="xl" color={theme.colors.text.inverse} strokeWidth={2.25} />
             </View>
             <Typography variant="h1">Tekrar hoş geldin</Typography>
@@ -67,7 +92,7 @@ export function LoginScreen({
             </Typography>
           </View>
 
-          <View style={{ gap: theme.spacing.lg }}>
+          <View style={styles.form}>
             {errorText && <InlineAlert tone="error" message={errorText} />}
 
             <TextField
@@ -90,7 +115,7 @@ export function LoginScreen({
               required
             />
 
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={styles.forgotRow}>
               <Button
                 label="Şifremi unuttum"
                 variant="ghost"
@@ -102,19 +127,19 @@ export function LoginScreen({
 
             <Button
               label="Giriş yap"
-              onPress={() => onSubmit?.({ identifier, password })}
+              onPress={submit}
               loading={loading}
               disabled={identifier.trim().length === 0 || password.length === 0}
             />
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
-              <View style={{ flex: 1 }}>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine}>
                 <Divider />
               </View>
               <Typography variant="micro" tone="muted">
                 veya
               </Typography>
-              <View style={{ flex: 1 }}>
+              <View style={styles.dividerLine}>
                 <Divider />
               </View>
             </View>

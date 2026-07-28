@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
@@ -103,7 +103,7 @@ const makeStyles = (theme: Theme) =>
     hidden: { opacity: 0 },
   });
 
-export function Button({
+export const Button = React.memo(function Button({
   label,
   onPress,
   variant = 'primary',
@@ -119,7 +119,7 @@ export function Button({
   style,
 }: ButtonProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const sizing = SIZE_MAP[size];
 
   const inert = disabled || loading;
@@ -180,4 +180,4 @@ export function Button({
       </View>
     </Touchable>
   );
-}
+});
