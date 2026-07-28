@@ -1,4 +1,4 @@
-import type { PackageTypeId } from '../types';
+import type { DeliverySpeed, PackageTypeId } from '../types';
 
 /**
  * Teslimat oluşturma formunun SAF veri modeli + adım doğrulaması.
@@ -11,6 +11,8 @@ export interface CreateDeliveryForm {
   dropoffAddressId: string | null;
   packageType: PackageTypeId;
   packageNote: string;
+  /** Teslimat hızı — fiyat adımında seçilir, ücreti doğrudan etkiler. */
+  speed: DeliverySpeed;
   senderPhone: string;
   recipientName: string;
   recipientPhone: string;
@@ -24,6 +26,7 @@ export const INITIAL_FORM: CreateDeliveryForm = {
   dropoffAddressId: null,
   packageType: 'small',
   packageNote: '',
+  speed: 'standard',
   senderPhone: '532 114 22 07',
   recipientName: '',
   recipientPhone: '',

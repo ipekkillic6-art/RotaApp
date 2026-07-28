@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { ArrowRight, Clock, CreditCard, Info, Plus, User } from 'lucide-react-native';
+import { ArrowRight, Clock, CreditCard, Info, Plus, Sparkles, User } from 'lucide-react-native';
 import {
   AddressCard,
   AddressField,
@@ -14,6 +14,7 @@ import {
   PhoneField,
   PriceSummary,
   ScrollContainer,
+  SegmentedControl,
   StepHeader,
   Surface,
   TextField,
@@ -24,7 +25,13 @@ import {
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import { brandLabel } from '../../utils/cardValidation';
-import type { Address, PackageTypeId, PaymentCard, PriceBreakdown } from '../../types';
+import type {
+  Address,
+  DeliverySpeed,
+  PackageTypeId,
+  PaymentCard,
+  PriceBreakdown,
+} from '../../types';
 import type { CreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -45,6 +52,11 @@ export const CREATE_STEPS = [
 
 export type CreateStepKey = (typeof CREATE_STEPS)[number]['key'];
 
+const SPEED_OPTIONS = [
+  { value: 'standard', label: 'Standart' },
+  { value: 'express', label: 'Ekspres' },
+];
+
 export interface CreateDeliveryScreenProps {
   step?: CreateStepKey;
   /** Form verisi ve seçim callback'i — hook'tan gelir (ekran saf/kontrollü). */
@@ -58,8 +70,13 @@ export interface CreateDeliveryScreenProps {
   /** Sunucu/oluşturma hatası. */
   errorText?: string;
   price?: PriceBreakdown | null;
+  /** Fiyatın hesaplandığı mesafe — özet satırında gösterilir. */
+  priceDistanceKm?: number;
   priceLoading?: boolean;
   priceFailed?: boolean;
+  /** Rota Plus avantajları geçerliyse fiyat adımında açıklama gösterilir. */
+  membershipActive?: boolean;
+  onRetryQuote?: () => void;
   onNext?: () => void;
   onBack?: () => void;
   onClose?: () => void;
@@ -83,8 +100,11 @@ export function CreateDeliveryScreen({
   canProceed = true,
   errorText,
   price,
+  priceDistanceKm,
   priceLoading = false,
   priceFailed = false,
+  membershipActive = false,
+  onRetryQuote,
   onNext,
   onBack,
   onClose,
@@ -248,12 +268,37 @@ export function CreateDeliveryScreen({
 
           {step === 'price' && (
             <>
+              <View style={{ gap: theme.spacing.sm }}>
+                <Typography variant="micro" tone="muted" overline>
+                  Teslimat hızı
+                </Typography>
+                <SegmentedControl
+                  options={SPEED_OPTIONS}
+                  value={form.speed}
+                  onChange={(value) => onChange({ speed: value as DeliverySpeed })}
+                />
+              </View>
+
               <PriceSummary
                 price={priceFailed ? undefined : price ?? undefined}
-                distanceKm={11.4}
+                distanceKm={priceDistanceKm}
+                discountLabel={membershipActive ? 'Rota Plus indirimi' : undefined}
                 loading={priceLoading}
-                onRetry={() => {}}
+                onRetry={onRetryQuote}
               />
+
+              {membershipActive && !priceLoading && !priceFailed && (
+                <InlineAlert
+                  tone="success"
+                  icon={Sparkles}
+                  message={
+                    form.speed === 'standard'
+                      ? 'Rota Plus üyeliğinle standart teslimat ücretsiz.'
+                      : 'Rota Plus üyeliğinle ekspres teslimatta %20 indirim uygulandı.'
+                  }
+                />
+              )}
+
               {!priceLoading && !priceFailed && (
                 <InlineAlert
                   tone="info"

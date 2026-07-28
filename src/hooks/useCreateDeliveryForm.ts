@@ -48,6 +48,7 @@ export function useCreateDeliveryForm() {
     }
   }, [cards, form.paymentCardId, update]);
   const price = useDeliveryStore((s) => s.price);
+  const quoteDistanceKm = useDeliveryStore((s) => s.quoteDistanceKm);
   const quoting = useDeliveryStore((s) => s.quoting);
   const quoteFailed = useDeliveryStore((s) => s.quoteFailed);
   const loading = useDeliveryStore((s) => s.loading);
@@ -72,6 +73,7 @@ export function useCreateDeliveryForm() {
       pickupAddress: pickup,
       dropoffAddress: dropoff,
       packageType: form.packageType,
+      speed: form.speed,
       packageDescription: form.packageNote.trim() || undefined,
       paymentCardId: form.paymentCardId ?? undefined,
     };
@@ -97,6 +99,7 @@ export function useCreateDeliveryForm() {
     requestQuote,
     submit,
     price,
+    quoteDistanceKm,
     quoting,
     quoteFailed,
     loading,

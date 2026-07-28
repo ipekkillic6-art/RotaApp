@@ -16,6 +16,8 @@ export interface PriceSummaryProps {
   price?: PriceBreakdown;
   /** Adds "11,4 km için" to the distance line. */
   distanceKm?: number;
+  /** İndirim satırının etiketi — indirimin nereden geldiğini söyler. */
+  discountLabel?: string;
   loading?: boolean;
   /** Retry handler shown when pricing failed. */
   onRetry?: () => void;
@@ -44,6 +46,7 @@ const makeStyles = (theme: Theme) =>
 export function PriceSummary({
   price,
   distanceKm,
+  discountLabel = 'İndirim',
   loading = false,
   onRetry,
   style,
@@ -106,7 +109,7 @@ export function PriceSummary({
         price.distance,
       )}
       {line('Ek hizmetler', price.extras)}
-      {price.discount > 0 && line('İndirim', price.discount, 'success')}
+      {price.discount > 0 && line(discountLabel, price.discount, 'success')}
 
       <Divider style={{ marginVertical: theme.spacing.sm }} />
 

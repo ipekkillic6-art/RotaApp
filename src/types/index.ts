@@ -72,6 +72,14 @@ export interface Courier {
   etaMinutes?: number;
 }
 
+/**
+ * Teslimat hızı.
+ *
+ * `express` kuryeyi öne alır ve taban+mesafe ücretine bir kat uygular.
+ * Rota Plus avantajları bu ayrıma dayanır: standart ücretsiz, ekspreste indirim.
+ */
+export type DeliverySpeed = 'standard' | 'express';
+
 export interface PriceBreakdown {
   base: number;
   distance: number;
@@ -102,6 +110,8 @@ export interface Delivery {
   dropoffAddress: Address;
   packageType: PackageTypeId;
   packageDescription?: string;
+  /** Seçilen teslimat hızı. Eski kayıtlarda yok — okurken `standard` varsayılır. */
+  speed?: DeliverySpeed;
   status: DeliveryStatus;
   /** Absent for drafts and for quotes that failed to price. */
   price?: PriceBreakdown;
