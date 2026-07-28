@@ -5,9 +5,10 @@ import { telUrl } from '../utils/phone';
 /**
  * Numarayı telefon uygulamasında açar.
  *
- * Numara eksik ya da aranamayacak kadar kısaysa sessizce hiçbir şey yapmak
- * yerine sebebini söyler. Arama başarısız olursa numara ekranda gösterilir ki
- * kullanıcı elle arayabilsin (simülatörde arama hep başarısız olur).
+ * Cihaz arama yapamıyorsa (simülatör, iPad) `openURL` HATA FIRLATMAZ — sessizce
+ * başarılı döner ve kullanıcı butona bastığında hiçbir şey olmaz. Bu yüzden
+ * önce `canOpenURL` ile kontrol edilir; açılamıyorsa numara ekranda gösterilir
+ * ki kullanıcı elle arayabilsin.
  */
 export function useCallPhone() {
   return useCallback(async (phone?: string | null, who = 'Numara') => {
@@ -19,9 +20,13 @@ export function useCallPhone() {
       return;
     }
     try {
-      await Linking.openURL(url);
+      if (await Linking.canOpenURL(url)) {
+        await Linking.openURL(url);
+        return;
+      }
     } catch {
-      Alert.alert('Aranamadı', phone ?? '', [{ text: 'Tamam' }]);
+      // Aşağıdaki bilgilendirmeye düş.
     }
+    Alert.alert('Bu cihazdan arama yapılamıyor', `${who}: ${phone}`, [{ text: 'Tamam' }]);
   }, []);
 }
