@@ -18,6 +18,7 @@ import { useCourierStore } from '../../stores/courierStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCourierLocationTracking } from '../../hooks/useCourierLocationTracking';
 import { useOpenDirections } from '../../hooks/useOpenDirections';
+import { useCallPhone } from '../../hooks/useCallPhone';
 import { deliveries, courierOffers } from '../../mocks/deliveries';
 import { couriers } from '../../mocks/couriers';
 import {
@@ -130,16 +131,20 @@ export function CourierTaskDetailContainer() {
   const navigation = useNavigation<Nav>();
   const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'CourierTaskDetail'>>().params;
   const openDirections = useOpenDirections();
+  const callPhone = useCallPhone();
   const task = byId(deliveryId);
-  // Paket alınmadan önce hedef alış noktası, sonrasında teslimat noktasıdır.
+  // Paket alınmadan önce muhatap gönderici, sonrasında alıcıdır — yol tarifi
+  // ve arama aynı kişiyi hedeflesin.
   const started = task.status !== 'assigned' && task.status !== 'accepted';
+  const contact = started ? task.dropoffAddress : task.pickupAddress;
   return (
     <CourierTaskDetailScreen
       task={task}
       onBack={() => navigation.goBack()}
       onStart={() => navigation.navigate(ROUTES.PICKUP, { deliveryId, stage: 'arriving' })}
       onUpdateStatus={() => navigation.navigate(ROUTES.ON_THE_WAY, { deliveryId })}
-      onNavigate={() => openDirections(started ? task.dropoffAddress : task.pickupAddress)}
+      onNavigate={() => openDirections(contact)}
+      onCall={() => callPhone(contact.contactPhone, started ? 'Alıcı' : 'Gönderici')}
     />
   );
 }
@@ -147,11 +152,14 @@ export function CourierTaskDetailContainer() {
 export function PickupContainer() {
   const navigation = useNavigation<Nav>();
   const updateStatus = useCourierStore((s) => s.updateStatus);
+  const callPhone = useCallPhone();
   const { deliveryId, stage } = useRoute<RouteProp<RootStackParamList, 'Pickup'>>().params;
+  const pickupTask = byId(deliveryId);
   return (
     <PickupScreen
-      task={byId(deliveryId)}
+      task={pickupTask}
       stage={stage}
+      onCallSender={() => callPhone(pickupTask.pickupAddress.contactPhone, 'Gönderici')}
       photoAttached={stage === 'arrived'}
       onBack={() => navigation.goBack()}
       onAdvance={() => {
@@ -177,6 +185,7 @@ export function OnTheWayContainer() {
   const navigation = useNavigation<Nav>();
   const updateStatus = useCourierStore((s) => s.updateStatus);
   const openDirections = useOpenDirections();
+  const callPhone = useCallPhone();
   const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'OnTheWay'>>().params;
 
   useEffect(() => {
@@ -189,8 +198,9 @@ export function OnTheWayContainer() {
       task={task}
       onBack={() => navigation.goBack()}
       onArrived={() => navigation.navigate(ROUTES.VERIFY, { deliveryId })}
-      // Yolda adımında hedef her zaman teslimat noktası.
+      // Yolda adımında muhatap her zaman alıcı.
       onNavigate={() => openDirections(task.dropoffAddress)}
+      onCall={() => callPhone(task.dropoffAddress.contactPhone, 'Alıcı')}
     />
   );
 }
