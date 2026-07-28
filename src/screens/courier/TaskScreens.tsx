@@ -227,6 +227,8 @@ export interface PickupScreenProps {
   onBack?: () => void;
   onAdvance?: () => void;
   onReportProblem?: () => void;
+  /** Göndericiyi ara — alış noktasındaki kişi. */
+  onCallSender?: () => void;
 }
 
 /**
@@ -244,6 +246,7 @@ export function PickupScreen({
   onBack,
   onAdvance,
   onReportProblem,
+  onCallSender,
 }: PickupScreenProps) {
   const theme = useTheme();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -303,7 +306,7 @@ export function PickupScreen({
                 accessibilityLabel="Göndericiyi ara"
                 variant="filled"
                 size="lg"
-                onPress={() => {}}
+                onPress={onCallSender}
               />
             </View>
           </Surface>

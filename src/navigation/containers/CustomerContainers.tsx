@@ -24,6 +24,7 @@ import { useMembershipStore } from '../../stores/membershipStore';
 import { hasActiveBenefits } from '../../utils/membership';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
+import { useCallPhone } from '../../hooks/useCallPhone';
 import { useReverseGeocode } from '../../hooks/useReverseGeocode';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { useAddressForm } from '../../hooks/useAddressForm';
@@ -334,6 +335,7 @@ export function TrackContainer() {
   const { online } = useNetworkStatus();
   // resolve() izni de istiyor; harita üzerindeki "İzin ver" bunu tetikler.
   const { resolve: requestLocationPermission } = useCurrentLocation();
+  const callPhone = useCallPhone();
 
   // Mount'ta çek + 15 sn'de bir yenile (socket Faz 6'da).
   useEffect(() => {
@@ -350,14 +352,8 @@ export function TrackContainer() {
       delivery={delivery}
       offline={!online}
       onBack={() => navigation.goBack()}
-      onCallCourier={
-        courierPhone
-          ? () =>
-              Linking.openURL(`tel:${courierPhone.replace(/\s/g, '')}`).catch(() =>
-                Alert.alert('Aranamadı', courierPhone, [{ text: 'Tamam' }]),
-              )
-          : undefined
-      }
+      // Kurye tarafıyla ortak hook: numara doğrulaması ve hata mesajı tek yerde.
+      onCallCourier={courierPhone ? () => callPhone(courierPhone, 'Kurye') : undefined}
       onMessageCourier={
         delivery.courier
           ? () => navigation.navigate(ROUTES.COURIER_CHAT, { deliveryId })
