@@ -43,7 +43,7 @@ export interface TypographyProps extends Omit<TextProps, 'style'> {
  * platform, so the Storybook large-text stories reflow exactly like a device
  * with Dynamic Type turned up.
  */
-export function Typography({
+export const Typography = React.memo(function Typography({
   children,
   variant = 'body',
   tone = 'primary',
@@ -82,4 +82,4 @@ export function Typography({
       {children}
     </RNText>
   );
-}
+});

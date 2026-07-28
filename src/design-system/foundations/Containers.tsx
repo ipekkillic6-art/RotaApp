@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
   View,
   useWindowDimensions,
   type ScrollViewProps,
@@ -11,6 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../themes';
+
+/** Tema bağımsız olduğu için modül kapsamında; her render'da yeniden üretilmez. */
+const fillStyle = StyleSheet.create({ fill: { flex: 1 } }).fill;
 
 /**
  * Fallback safe-area insets.
@@ -125,16 +129,25 @@ export function ScrollContainer({
 }: ScrollContainerProps) {
   const theme = useTheme();
 
+  // Form ekranlarında her tuş vuruşu üst bileşeni yeniden render eder. Stil
+  // dizileri memoize edilmezse ScrollView her karakterde yeni stil prop'u alır
+  // ve gereksiz yere native tarafa güncelleme gider.
+  const scrollStyle = useMemo(() => [fillStyle, style], [style]);
+  const contentStyle = useMemo(
+    () => [
+      {
+        paddingHorizontal: padded ? theme.layout.screenPaddingX : 0,
+        paddingBottom: theme.spacing['2xl'] + bottomInset,
+      },
+      contentContainerStyle,
+    ],
+    [theme, padded, bottomInset, contentContainerStyle],
+  );
+
   const scroller = (
     <ScrollView
-      style={[{ flex: 1 }, style]}
-      contentContainerStyle={[
-        {
-          paddingHorizontal: padded ? theme.layout.screenPaddingX : 0,
-          paddingBottom: theme.spacing['2xl'] + bottomInset,
-        },
-        contentContainerStyle,
-      ]}
+      style={scrollStyle}
+      contentContainerStyle={contentStyle}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
       showsVerticalScrollIndicator={false}
@@ -148,7 +161,7 @@ export function ScrollContainer({
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={fillStyle}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {scroller}

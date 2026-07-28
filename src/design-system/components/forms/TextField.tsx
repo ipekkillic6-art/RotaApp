@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { X } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { fontFamily } from '../../tokens';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
@@ -86,8 +86,11 @@ const makeStyles = (theme: Theme) =>
  *
  * Focus is drawn with a 2pt border rather than a glow: it survives dark mode,
  * costs no blur, and stays visible for a low-vision user.
+ *
+ * Memoised so that a keystroke in one field does not re-render every other
+ * field on the form.
  */
-export function TextField({
+export const TextField = React.memo(function TextField({
   value,
   onChangeText,
   label,
@@ -111,7 +114,7 @@ export function TextField({
   ...inputProps
 }: TextFieldProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const [focused, setFocused] = useState(false);
 
   const status = errorText ? 'error' : successText ? 'success' : 'default';
@@ -175,7 +178,10 @@ export function TextField({
             {
               color: disabled ? theme.colors.text.muted : theme.colors.text.primary,
               fontSize: 15 * theme.fontScale,
-              lineHeight: 22 * theme.fontScale,
+              // lineHeight yalnızca çok satırlıda. Tek satırlık TextInput'ta iOS,
+              // metin kutusunu yazı tipi metriklerinden hesaplar; sabit bir
+              // lineHeight verilince Inter'in alt uzantıları (p, g, ş) kırpılır.
+              lineHeight: multiline ? 22 * theme.fontScale : undefined,
               minHeight: multiline ? rows * 22 * theme.fontScale : undefined,
             },
           ]}
@@ -197,4 +203,4 @@ export function TextField({
       </View>
     </FieldShell>
   );
-}
+});

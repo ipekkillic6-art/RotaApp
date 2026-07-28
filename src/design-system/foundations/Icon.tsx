@@ -21,8 +21,12 @@ export interface IconProps {
  * Every icon in the product is a Lucide outline icon at 1.75 stroke — emoji
  * and unicode glyphs are never used as icons, because they don't respect the
  * colour system and render differently per platform.
+ *
+ * Memoised: every glyph is an SVG tree, and the props are a stable component
+ * reference plus primitives. Without this, typing one character in a form
+ * re-renders every icon on the screen.
  */
-export function Icon({
+export const Icon = React.memo(function Icon({
   icon: LucideGlyph,
   size = 'md',
   tone = 'primary',
@@ -38,4 +42,4 @@ export function Icon({
       strokeWidth={strokeWidth}
     />
   );
-}
+});
