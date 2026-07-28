@@ -25,6 +25,8 @@ export interface LoginScreenProps {
   loading?: boolean;
   /** "Beni hatırla" ile saklanmış kimlik — alanı önceden doldurur. */
   initialIdentifier?: string;
+  /** "Beni hatırla" ile saklanmış parola — şifre alanını önceden doldurur. */
+  initialPassword?: string;
   onSubmit?: (credentials: {
     identifier: string;
     password: string;
@@ -73,6 +75,7 @@ export function LoginScreen({
   errorText,
   loading = false,
   initialIdentifier,
+  initialPassword,
   onSubmit,
   onForgotPassword,
   onRegister,
@@ -80,9 +83,24 @@ export function LoginScreen({
   const theme = useTheme();
   const styles = useThemedStyles(makeLoginStyles);
   const [identifier, setIdentifier] = useState(initialIdentifier ?? '');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(initialPassword ?? '');
   // Hatırlanmış bir kimlik varsa kullanıcı bunu daha önce istemiştir.
   const [remember, setRemember] = useState(Boolean(initialIdentifier));
+
+  /**
+   * Kimlik hatırlanan hesaptan farklı bir şeye çevrilirse dolu gelen parola
+   * artık o hesaba ait değil — temizlenir. Aksi halde kullanıcı başka bir
+   * hesabın parolasıyla giriş denemiş olurdu.
+   */
+  const changeIdentifier = useCallback(
+    (value: string) => {
+      setIdentifier(value);
+      if (initialPassword && value.trim() !== (initialIdentifier ?? '').trim()) {
+        setPassword('');
+      }
+    },
+    [initialIdentifier, initialPassword],
+  );
 
   // Button memoize edilmiş; onPress her tuşta yeni referans alırsa memo boşa
   // çıkar ve buton her karakterde yeniden render olur. Güncel değerleri bir
@@ -122,7 +140,7 @@ export function LoginScreen({
               placeholder="ornek@sirket.com"
               icon={Mail}
               value={identifier}
-              onChangeText={setIdentifier}
+              onChangeText={changeIdentifier}
               autoCapitalize="none"
               keyboardType="email-address"
               textContentType="username"
