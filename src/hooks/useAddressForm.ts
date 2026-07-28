@@ -4,6 +4,7 @@ import {
   INITIAL_ADDRESS_FORM,
   addressErrors,
   addressToForm,
+  applyAddressPatch,
   canSubmitAddress,
   toCreateAddressPayload,
   type AddressForm,
@@ -30,8 +31,9 @@ export function useAddressForm(initial?: Address) {
 
   const isEditing = initial != null;
 
+  // Yama kuralı saf modülde: adres metni elle değişirse koordinat düşer.
   const update = useCallback(
-    (patch: Partial<AddressForm>) => setForm((f) => ({ ...f, ...patch })),
+    (patch: Partial<AddressForm>) => setForm((f) => applyAddressPatch(f, patch)),
     [],
   );
 

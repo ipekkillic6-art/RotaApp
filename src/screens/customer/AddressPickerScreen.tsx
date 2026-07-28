@@ -19,20 +19,30 @@ import {
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import { savedAddresses as defaultSavedAddresses, addressSuggestions } from '../../mocks/addresses';
+import { coordOf } from '../../utils/geo';
 import type { Address } from '../../types';
 
 export interface AddressPickerScreenProps {
   title?: string;
+  /**
+   * `picker`: bir adres seçilip onaylanır (alt buton). `book`: adres defteri —
+   * onay butonu yoktur, satıra dokunmak adresi düzenlemeye açar.
+   */
+  mode?: 'picker' | 'book';
   /** Pre-fills the query — the "results" and "no results" stories use this. */
   query?: string;
   /** Overrides the results list. Empty array renders the no-results state. */
   results?: Address[];
   /** Kayıtlı adresler — container store'dan geçirir; yoksa mock kullanılır. */
   savedAddresses?: Address[];
-  locationPermission?: 'granted' | 'denied';
+  locationPermission?: 'granted' | 'denied' | 'undetermined';
   /** Konum alınıyor (GPS + reverse geocode). */
   locating?: boolean;
   onUseCurrentLocation?: () => void;
+  /** Haritadan konum seç. */
+  onPickOnMap?: () => void;
+  /** Konum izni iste (izin reddedilmiş durumda haritada gösterilir). */
+  onRequestLocationPermission?: () => void;
   /** Yeni adres formunu aç. */
   onAddAddress?: () => void;
   /** Kayıtlı bir adresi düzenle (kart üzerindeki kalem). */
@@ -49,12 +59,15 @@ export interface AddressPickerScreenProps {
  */
 export function AddressPickerScreen({
   title = 'Adres seç',
+  mode = 'picker',
   query: initialQuery = '',
   results,
   savedAddresses = defaultSavedAddresses,
   locationPermission = 'granted',
   locating = false,
   onUseCurrentLocation,
+  onPickOnMap,
+  onRequestLocationPermission,
   onAddAddress,
   onEditAddress,
   onSelect,
@@ -62,6 +75,7 @@ export function AddressPickerScreen({
 }: AddressPickerScreenProps) {
   const theme = useTheme();
   const [query, setQuery] = useState(initialQuery);
+  const [selectedId, setSelectedId] = useState<string>();
 
   // Arama havuzu: kayıtlı adresler + ek öneriler (id'ye göre tekilleştirilir).
   const searchPool = [
@@ -131,21 +145,30 @@ export function AddressPickerScreen({
         />
       }
       footer={
-        <Button
-          label="Bu adresi kullan"
-          onPress={() => onSelect?.(list[0] ?? savedAddresses[0])}
-          disabled={list.length === 0}
-        />
+        // Onay butonu yalnızca seçim modunda; adres defterinde işlevi yok.
+        mode === 'picker' ? (
+          <Button
+            label="Bu adresi kullan"
+            onPress={() => {
+              const chosen = list.find((a) => a.id === selectedId);
+              if (chosen) onSelect?.(chosen);
+            }}
+            disabled={!selectedId}
+          />
+        ) : undefined
       }
     >
       <ScrollContainer>
         <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.md }}>
           <MapPreview
             height={160}
-            caption={locationPermission === 'granted' ? 'Haritada seç' : undefined}
+            // Burada bir rota yok; listedeki ilk adres tek işaret olarak
+            // gösterilir. Koordinat yoksa bileşen kendi varsayılanına düşer.
+            pickup={coordOf(list[0])}
+            caption={locationPermission === 'denied' ? undefined : 'Haritada seç'}
             permissionDenied={locationPermission === 'denied'}
-            onRequestPermission={() => {}}
-            onPress={locationPermission === 'granted' ? () => {} : undefined}
+            onRequestPermission={onRequestLocationPermission}
+            onPress={locationPermission === 'denied' ? undefined : onPickOnMap}
           />
 
           <Surface tone="elevated" radius="lg" padding="lg" bordered>
@@ -156,7 +179,12 @@ export function AddressPickerScreen({
               onUseCurrentLocation,
             )}
             <Divider />
-            {shortcut(MapIcon, 'Haritada seç', 'Pini sürükleyerek tam nokta belirle')}
+            {shortcut(
+              MapIcon,
+              'Haritada seç',
+              'Haritayı kaydırarak pini konuma getir',
+              onPickOnMap,
+            )}
             <Divider />
             {shortcut(Plus, 'Yeni adres ekle', 'Elle yeni bir adres tanımla', onAddAddress)}
           </Surface>
@@ -176,7 +204,15 @@ export function AddressPickerScreen({
                   key={address.id}
                   address={address}
                   variant="saved"
-                  onPress={() => onSelect?.(address)}
+                  selected={mode === 'picker' && selectedId === address.id}
+                  // Defterde satır düzenlemeyi açar; seçim modunda seçimi kurar.
+                  onPress={
+                    mode === 'book'
+                      ? onEditAddress
+                        ? () => onEditAddress(address)
+                        : undefined
+                      : () => setSelectedId(address.id)
+                  }
                   onEdit={onEditAddress ? () => onEditAddress(address) : undefined}
                 />
               ))
