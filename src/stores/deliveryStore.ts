@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import {
   deliveryService,
-  MOCK_DISTANCE_KM,
   type CreateDeliveryPayload,
   type QuotePayload,
 } from '../services/deliveryService';
@@ -71,11 +70,9 @@ export const useDeliveryStore = create<DeliveryState>((set) => ({
   quote: async (payload) => {
     set({ quoting: true, quoteFailed: false });
     try {
-      set({
-        price: await deliveryService.quote(payload),
-        quoteDistanceKm: MOCK_DISTANCE_KM,
-        quoting: false,
-      });
+      // Fiyat ve mesafe aynı yanıttan gelir; ekranda ikisi tutarlı kalsın.
+      const quote = await deliveryService.quote(payload);
+      set({ price: quote.price, quoteDistanceKm: quote.distanceKm, quoting: false });
     } catch {
       set({ quoting: false, quoteFailed: true });
     }
