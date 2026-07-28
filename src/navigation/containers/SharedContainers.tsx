@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,8 @@ import { LoginScreen, RegisterScreen } from '../../screens/shared/AuthScreens';
 import { RoleSelectScreen } from '../../screens/shared/RoleSelectScreen';
 import { ProfileScreen } from '../../screens/shared/ProfileScreen';
 import { PrivacySecurityScreen } from '../../screens/shared/PrivacySecurityScreen';
+import { ForgotPasswordScreen } from '../../screens/shared/ForgotPasswordScreen';
+import { ChangePasswordScreen } from '../../screens/shared/ChangePasswordScreen';
 import { HelpSupportScreen } from '../../screens/shared/HelpSupportScreen';
 import { PaymentMethodsScreen } from '../../screens/shared/PaymentMethodsScreen';
 import { AddCardScreen } from '../../screens/shared/AddCardScreen';
@@ -19,8 +21,18 @@ import { usePaymentStore } from '../../stores/paymentStore';
 import { useCardForm } from '../../hooks/useCardForm';
 import { faqItems } from '../../mocks/support';
 import { SUPPORT } from '../../constants/config';
+import {
+  changePasswordErrors,
+  emailError,
+  identifierError,
+  passwordError,
+  INITIAL_CHANGE_PASSWORD,
+  type ChangePasswordForm,
+} from '../../utils/authValidation';
 import type { RootStackParamList } from '../../types/navigation';
 import { ROUTES } from '../routes';
+
+type RegisterErrors = Partial<Record<'fullName' | 'phone' | 'email' | 'password' | 'terms', string>>;
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -43,19 +55,26 @@ export function LoginContainer() {
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
   const error = useAuthStore((s) => s.error);
+  const [clientError, setClientError] = useState<string>();
   // Başarıda RootNavigator koşullu olarak RoleSelect'e geçer — navigate gerekmez.
   return (
     <LoginScreen
       loading={loading}
-      errorText={error}
-      onSubmit={({ identifier, password }) => login({ email: identifier.trim(), password })}
-      onForgotPassword={() =>
-        Alert.alert(
-          'Şifre sıfırlama',
-          'E-posta veya telefonunu gir, sıfırlama bağlantısı gönderelim.',
-          [{ text: 'Tamam' }],
-        )
-      }
+      errorText={clientError ?? error}
+      onSubmit={({ identifier, password }) => {
+        const idError = identifierError(identifier);
+        if (idError) {
+          setClientError(idError);
+          return;
+        }
+        if (!password) {
+          setClientError('Şifreni gir.');
+          return;
+        }
+        setClientError(undefined);
+        login({ email: identifier.trim(), password });
+      }}
+      onForgotPassword={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
       onRegister={() => navigation.navigate(ROUTES.REGISTER)}
     />
   );
@@ -65,13 +84,75 @@ export function RegisterContainer() {
   const navigation = useNavigation<Nav>();
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
+  const error = useAuthStore((s) => s.error);
+  const [errors, setErrors] = useState<RegisterErrors>({});
   return (
     <RegisterScreen
       loading={loading}
+      errors={errors}
+      errorText={error}
       onBack={() => navigation.goBack()}
-      onSubmit={({ fullName, email, password }) =>
-        register({ name: fullName.trim(), email: email.trim(), password, role: 'customer' })
-      }
+      onSubmit={({ fullName, email, password }) => {
+        const next: RegisterErrors = {};
+        if (!fullName.trim()) next.fullName = 'Ad soyad gerekli.';
+        const emError = emailError(email);
+        if (emError) next.email = emError;
+        const pwError = passwordError(password);
+        if (pwError) next.password = pwError;
+        setErrors(next);
+        if (Object.keys(next).length > 0) return;
+        register({ name: fullName.trim(), email: email.trim(), password, role: 'customer' });
+      }}
+    />
+  );
+}
+
+export function ForgotPasswordContainer() {
+  const navigation = useNavigation<Nav>();
+  const requestPasswordReset = useAuthStore((s) => s.requestPasswordReset);
+  const loading = useAuthStore((s) => s.loading);
+  const error = useAuthStore((s) => s.error);
+  const [sent, setSent] = useState(false);
+  return (
+    <ForgotPasswordScreen
+      sending={loading}
+      sent={sent}
+      errorText={error}
+      onSubmit={async (email) => {
+        const ok = await requestPasswordReset(email);
+        if (ok) setSent(true);
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+export function ChangePasswordContainer() {
+  const navigation = useNavigation<Nav>();
+  const changePassword = useAuthStore((s) => s.changePassword);
+  const loading = useAuthStore((s) => s.loading);
+  const error = useAuthStore((s) => s.error);
+  const [form, setForm] = useState<ChangePasswordForm>(INITIAL_CHANGE_PASSWORD);
+  const [submitted, setSubmitted] = useState(false);
+  const errors = submitted ? changePasswordErrors(form) : {};
+  return (
+    <ChangePasswordScreen
+      form={form}
+      errors={errors}
+      saving={loading}
+      errorText={error}
+      onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+      onSubmit={async () => {
+        setSubmitted(true);
+        if (Object.keys(changePasswordErrors(form)).length > 0) return;
+        const ok = await changePassword(form.current, form.next);
+        if (ok) {
+          Alert.alert('Şifre güncellendi', 'Şifren başarıyla değiştirildi.', [
+            { text: 'Tamam', onPress: () => navigation.goBack() },
+          ]);
+        }
+      }}
+      onBack={() => navigation.goBack()}
     />
   );
 }
@@ -206,13 +287,7 @@ export function PrivacySecurityContainer() {
       loading={loading}
       errorText={error}
       onToggle={(key, value) => setPrivacy(key, value)}
-      onChangePassword={() =>
-        Alert.alert(
-          'Şifreyi değiştir',
-          'Kayıtlı e-postana bir sıfırlama bağlantısı göndereceğiz.',
-          [{ text: 'Vazgeç', style: 'cancel' }, { text: 'Bağlantı gönder' }],
-        )
-      }
+      onChangePassword={() => navigation.navigate(ROUTES.CHANGE_PASSWORD)}
       onLogoutAllDevices={() =>
         Alert.alert(
           'Tüm cihazlardan çıkış',

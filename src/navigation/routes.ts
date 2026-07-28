@@ -10,6 +10,8 @@ export const ROUTES = {
   ONBOARDING: 'Onboarding',
   LOGIN: 'Login',
   REGISTER: 'Register',
+  FORGOT_PASSWORD: 'ForgotPassword',
+  CHANGE_PASSWORD: 'ChangePassword',
   ROLE_SELECT: 'RoleSelect',
   PRIVACY_SECURITY: 'PrivacySecurity',
   HELP_SUPPORT: 'HelpSupport',

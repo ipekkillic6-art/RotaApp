@@ -15,11 +15,13 @@ interface AuthState {
   restore: () => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   logout: () => Promise<void>;
   setRole: (role: UserRole) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   role: null,
   restoring: true,
@@ -67,6 +69,32 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: session.user, role: null, loading: false });
     } catch (e) {
       set({ loading: false, error: e instanceof Error ? e.message : 'Kayıt başarısız' });
+    }
+  },
+
+  requestPasswordReset: async (email) => {
+    set({ loading: true, error: undefined });
+    try {
+      await authService.requestPasswordReset(email);
+      set({ loading: false });
+      return true;
+    } catch (e) {
+      set({ loading: false, error: e instanceof Error ? e.message : 'İstek gönderilemedi' });
+      return false;
+    }
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const email = get().user?.email;
+    if (!email) return false;
+    set({ loading: true, error: undefined });
+    try {
+      await authService.changePassword({ email, currentPassword, newPassword });
+      set({ loading: false });
+      return true;
+    } catch (e) {
+      set({ loading: false, error: e instanceof Error ? e.message : 'Şifre değiştirilemedi' });
+      return false;
     }
   },
 

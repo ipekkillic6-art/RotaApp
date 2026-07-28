@@ -8,6 +8,8 @@ import {
   OnboardingContainer,
   LoginContainer,
   RegisterContainer,
+  ForgotPasswordContainer,
+  ChangePasswordContainer,
   RoleSelectContainer,
   PrivacySecurityContainer,
   HelpSupportContainer,
@@ -62,6 +64,7 @@ export function RootNavigator() {
           <Stack.Screen name="Onboarding" component={OnboardingContainer} />
           <Stack.Screen name="Login" component={LoginContainer} />
           <Stack.Screen name="Register" component={RegisterContainer} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordContainer} />
         </Stack.Group>
       ) : !role ? (
         // Girişli, rol seçilmedi
@@ -84,6 +87,7 @@ export function RootNavigator() {
 
           {/* Ortak (her rol) — Profil'den açılır */}
           <Stack.Screen name="PrivacySecurity" component={PrivacySecurityContainer} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordContainer} />
           <Stack.Screen name="HelpSupport" component={HelpSupportContainer} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsContainer} />
           <Stack.Screen name="AddCard" component={AddCardContainer} />

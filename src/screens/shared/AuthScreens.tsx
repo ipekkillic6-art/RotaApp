@@ -137,12 +137,14 @@ export interface RegisterValues {
 export interface RegisterScreenProps {
   /** Field-level errors keyed by field name. */
   errors?: Partial<Record<'fullName' | 'phone' | 'email' | 'password' | 'terms', string>>;
+  /** Server-side failure, shown above the form. */
+  errorText?: string;
   loading?: boolean;
   onSubmit?: (values: RegisterValues) => void;
   onBack?: () => void;
 }
 
-export function RegisterScreen({ errors, loading, onSubmit, onBack }: RegisterScreenProps) {
+export function RegisterScreen({ errors, errorText, loading, onSubmit, onBack }: RegisterScreenProps) {
   const theme = useTheme();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -156,6 +158,7 @@ export function RegisterScreen({ errors, loading, onSubmit, onBack }: RegisterSc
         <AppHeader title="Hesap oluştur" onBack={onBack} />
         <ScrollContainer keyboardAware>
           <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.md }}>
+            {errorText && <InlineAlert tone="error" message={errorText} />}
             <TextField
               label="Ad soyad"
               placeholder="Adınız ve soyadınız"
