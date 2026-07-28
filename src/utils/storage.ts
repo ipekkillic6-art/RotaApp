@@ -45,13 +45,18 @@ export const STORAGE_KEYS = {
   user: 'auth.user',
   role: 'auth.role',
   /**
-   * "Beni hatırla" ile saklanan e-posta/telefon.
-   *
-   * Yalnızca kimlik alanı tutulur — parola BURAYA YAZILMAZ. Parolayı iOS
-   * Keychain (AutoFill) saklar; uygulamanın kendi deposunda parola kopyası
-   * bulunmaz.
+   * "Beni hatırla" ile saklanan e-posta/telefon. Hassas değil → AsyncStorage.
    */
   rememberedIdentifier: 'auth.rememberedIdentifier',
+  /**
+   * "Beni hatırla" ile saklanan parola — giriş alanını önceden doldurur.
+   *
+   * Kullanıcının bilinçli tercihi; kutu işaretli değilken YAZILMAZ ve işaret
+   * kaldırılınca silinir. Parola olduğu için AsyncStorage'a değil `secure`
+   * (Keychain) üzerine yazılır. Telefonu açık bulan biri parolayı da görebilir
+   * — daha güvenli seçenek biyometrik kilit arkasına almaktır.
+   */
+  rememberedPassword: 'auth.rememberedPassword',
   /**
    * Mock backend'de açılan hesaplar (yalnızca `USE_MOCKS` açıkken).
    *

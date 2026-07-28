@@ -26,15 +26,19 @@ interface AuthState {
   error?: string;
   /** Hata bir forma alanına aitse alanın adı (örn. `'email'`). */
   errorField?: string;
-  /**
-   * "Beni hatırla" ile saklanmış e-posta/telefon — giriş alanını önceden
-   * doldurur. Parola saklanmaz; onu iOS Keychain (AutoFill) doldurur.
-   */
+  /** "Beni hatırla" ile saklanmış e-posta/telefon — giriş alanını doldurur. */
   rememberedIdentifier: string | null;
+  /** "Beni hatırla" ile saklanmış parola — şifre alanını doldurur. */
+  rememberedPassword: string | null;
 
   restore: () => Promise<void>;
-  /** Kimliği hatırla (veya `null` ile unut). */
-  rememberIdentifier: (identifier: string | null) => Promise<void>;
+  /**
+   * Giriş bilgilerini hatırla. `null` geçilirse ikisi de silinir.
+   * Parola `secure` (Keychain) üzerine yazılır.
+   */
+  rememberCredentials: (
+    credentials: { identifier: string; password: string } | null,
+  ) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<boolean>;
@@ -51,13 +55,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: undefined,
   errorField: undefined,
   rememberedIdentifier: null,
+  rememberedPassword: null,
 
   restore: async () => {
     try {
-      // Hatırlanan kimlik oturumdan bağımsızdır: çıkış yapılmış olsa da
-      // giriş alanını doldurmalı. Bu yüzden token kontrolünden önce okunur.
-      const remembered = await storage.get<string>(STORAGE_KEYS.rememberedIdentifier);
-      set({ rememberedIdentifier: remembered ?? null });
+      // Hatırlanan bilgiler oturumdan bağımsızdır: çıkış yapılmış olsa da
+      // giriş alanlarını doldurmalı. Bu yüzden token kontrolünden önce okunur.
+      const [remembered, rememberedPw] = await Promise.all([
+        storage.get<string>(STORAGE_KEYS.rememberedIdentifier),
+        secure.get(STORAGE_KEYS.rememberedPassword),
+      ]);
+      set({ rememberedIdentifier: remembered ?? null, rememberedPassword: rememberedPw ?? null });
 
       const token = await secure.get(STORAGE_KEYS.authToken);
       if (!token) {
@@ -74,11 +82,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  rememberIdentifier: async (identifier) => {
-    const value = identifier?.trim() || null;
-    if (value) await storage.set(STORAGE_KEYS.rememberedIdentifier, value);
-    else await storage.remove(STORAGE_KEYS.rememberedIdentifier);
-    set({ rememberedIdentifier: value });
+  rememberCredentials: async (credentials) => {
+    const identifier = credentials?.identifier.trim() || null;
+    const password = credentials?.password || null;
+    // Kimlik veya parola eksikse ikisi de tutulmaz — yarım kayıt, alanı
+    // yanlış dolduran bir duruma yol açardı.
+    if (!identifier || !password) {
+      await Promise.all([
+        storage.remove(STORAGE_KEYS.rememberedIdentifier),
+        secure.remove(STORAGE_KEYS.rememberedPassword),
+      ]);
+      set({ rememberedIdentifier: null, rememberedPassword: null });
+      return;
+    }
+    await Promise.all([
+      storage.set(STORAGE_KEYS.rememberedIdentifier, identifier),
+      secure.set(STORAGE_KEYS.rememberedPassword, password),
+    ]);
+    set({ rememberedIdentifier: identifier, rememberedPassword: password });
   },
 
   login: async (payload) => {
