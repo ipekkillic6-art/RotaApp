@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   deliveryService,
+  MOCK_DISTANCE_KM,
   type CreateDeliveryPayload,
   type QuotePayload,
 } from '../services/deliveryService';
@@ -15,6 +16,8 @@ interface DeliveryState {
 
   // Teslimat oluşturma — fiyat adımı
   price: PriceBreakdown | null;
+  /** Fiyatın hesaplandığı mesafe — özet satırındaki "11,4 km için" bundan gelir. */
+  quoteDistanceKm: number | null;
   quoting: boolean;
   quoteFailed: boolean;
 
@@ -34,6 +37,7 @@ export const useDeliveryStore = create<DeliveryState>((set) => ({
   loading: false,
   error: undefined,
   price: null,
+  quoteDistanceKm: null,
   quoting: false,
   quoteFailed: false,
 
@@ -67,13 +71,18 @@ export const useDeliveryStore = create<DeliveryState>((set) => ({
   quote: async (payload) => {
     set({ quoting: true, quoteFailed: false });
     try {
-      set({ price: await deliveryService.quote(payload), quoting: false });
+      set({
+        price: await deliveryService.quote(payload),
+        quoteDistanceKm: MOCK_DISTANCE_KM,
+        quoting: false,
+      });
     } catch {
       set({ quoting: false, quoteFailed: true });
     }
   },
 
-  resetQuote: () => set({ price: null, quoting: false, quoteFailed: false }),
+  resetQuote: () =>
+    set({ price: null, quoteDistanceKm: null, quoting: false, quoteFailed: false }),
 
   create: async (payload) => {
     set({ loading: true, error: undefined });

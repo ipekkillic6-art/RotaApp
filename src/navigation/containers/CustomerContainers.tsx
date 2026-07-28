@@ -20,6 +20,8 @@ import { useChatStore } from '../../stores/chatStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAddressStore } from '../../stores/addressStore';
+import { useMembershipStore } from '../../stores/membershipStore';
+import { hasActiveBenefits } from '../../utils/membership';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useReverseGeocode } from '../../hooks/useReverseGeocode';
@@ -105,12 +107,22 @@ export function CreateContainer() {
     requestQuote,
     submit,
     price,
+    quoteDistanceKm,
     quoting,
     quoteFailed,
     error,
   } = useCreateDeliveryForm();
 
-  // Fiyat adımına gelince ücreti sorgula (payload hazırsa).
+  // Üyelik yalnızca AÇIKLAMA için — indirimi sunucu uygular, istemci istemez.
+  const membership = useMembershipStore((s) => s.membership);
+  const fetchMembership = useMembershipStore((s) => s.fetch);
+  useEffect(() => {
+    fetchMembership();
+  }, [fetchMembership]);
+  const membershipActive = hasActiveBenefits(membership, new Date());
+
+  // Fiyat adımına gelince ücreti sorgula. `requestQuote` payload'a bağlı
+  // olduğundan hız değiştiğinde de yeniden tetiklenir.
   useEffect(() => {
     if (step === 'price') requestQuote();
   }, [step, requestQuote]);
@@ -125,8 +137,11 @@ export function CreateContainer() {
       onAddCard={() => navigation.navigate(ROUTES.ADD_CARD)}
       canProceed={canProceed(step)}
       price={price}
+      priceDistanceKm={quoteDistanceKm ?? undefined}
       priceLoading={quoting}
       priceFailed={quoteFailed}
+      membershipActive={membershipActive}
+      onRetryQuote={requestQuote}
       errorText={error}
       onNext={async () => {
         if (next) {

@@ -15,6 +15,15 @@ let membership: Membership = { ...initialMembership };
 const planById = (id: MembershipPlanId): MembershipPlan | undefined =>
   membershipPlans.find((p) => p.id === id);
 
+/**
+ * Mock backend'in üyelik kaydını senkron okur.
+ *
+ * Yalnızca başka bir servis mock'u için (fiyat hesabı üyelik hak edişine
+ * bakar). Gerçek backend'de bu bilgi sunucuda durur ve istemci hiç görmez —
+ * bu yüzden istemci koduna sızmasın diye store/ekran katmanına açılmaz.
+ */
+export const currentMembership = (): Membership => membership;
+
 export const membershipService = {
   getPlans: (signal?: AbortSignal) =>
     api.get<MembershipPlan[]>('/membership/plans', { signal, mock: () => membershipPlans }),
