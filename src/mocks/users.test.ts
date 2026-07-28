@@ -5,10 +5,54 @@ import {
   findUserByPhone,
   isEmailTaken,
   isPhoneTaken,
+  mergeSavedUsers,
   mockUsers,
   normalizeEmail,
   normalizePhone,
+  registeredOnly,
+  type MockUser,
 } from './users.ts';
+
+const registered: MockUser = {
+  id: 'u-1750000000000',
+  name: 'Yeni Kullanıcı',
+  email: 'yeni@rota.app',
+  password: 'rota1234',
+  role: 'customer',
+  phone: '555 111 22 33',
+};
+
+test('mergeSavedUsers saklanan hesabı listeye ekler', () => {
+  const merged = mergeSavedUsers(mockUsers, [registered]);
+  assert.equal(merged.length, mockUsers.length + 1);
+  assert.ok(merged.some((u) => u.id === registered.id));
+});
+
+test('mergeSavedUsers aynı hesabı iki kez eklemez', () => {
+  // Uygulama yeniden yüklendiğinde birleştirme tekrar çalışır.
+  const once = mergeSavedUsers(mockUsers, [registered]);
+  const twice = mergeSavedUsers(once, [registered]);
+  assert.equal(twice.length, once.length);
+});
+
+test('mergeSavedUsers demo hesaplarını koddaki haliyle bırakır', () => {
+  // Seed verisi değişirse güncel hali görünmeli; saklanan kopya ezmemeli.
+  const staleSeed: MockUser = { ...mockUsers[0], name: 'ESKİ İSİM' };
+  const merged = mergeSavedUsers(mockUsers, [staleSeed]);
+  assert.equal(merged.find((u) => u.id === mockUsers[0].id)?.name, mockUsers[0].name);
+});
+
+test('registeredOnly demo hesaplarını saklamaz', () => {
+  const seedIds = new Set(mockUsers.map((u) => u.id));
+  const all = [...mockUsers, registered];
+  const toSave = registeredOnly(all, seedIds);
+  assert.deepEqual(toSave, [registered]);
+});
+
+test('registeredOnly hiç kayıt yoksa boş dizi verir', () => {
+  const seedIds = new Set(mockUsers.map((u) => u.id));
+  assert.deepEqual(registeredOnly(mockUsers, seedIds), []);
+});
 
 test('normalizeEmail boşlukları kırpar ve küçük harfe çevirir', () => {
   assert.equal(normalizeEmail('  Ipek@Rota.APP '), 'ipek@rota.app');

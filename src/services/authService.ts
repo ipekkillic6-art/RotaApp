@@ -4,11 +4,51 @@ import {
   findUserByPhone,
   isEmailTaken,
   isPhoneTaken,
+  mergeSavedUsers,
   mockUsers,
   normalizeEmail,
+  registeredOnly,
   type MockUser,
 } from '../mocks/users';
+import { secure, STORAGE_KEYS } from '../utils/storage';
 import type { UserRole } from '../types';
+
+/* ── Mock hesap kalıcılığı ───────────────────────────────────────────────
+ *
+ * `mockUsers` bellekte bir dizi; kayıt olan kullanıcı uygulama yeniden
+ * başlayınca kayboluyordu ve bir daha giriş yapamıyordu. Mock backend'in
+ * "veritabanı" görevini görsün diye açılan hesaplar cihazda saklanır.
+ *
+ * Yalnızca kayıtla eklenenler saklanır; demo hesapları koddan gelir, böylece
+ * seed verisi değişince güncel hali görünür. Parola içerdiği için AsyncStorage
+ * yerine `secure` (Keychain) kullanılır.
+ *
+ * Gerçek backend bağlanınca bu blok tamamen silinir.
+ */
+
+const SEED_IDS = new Set(mockUsers.map((u) => u.id));
+let usersLoaded = false;
+
+async function ensureUsersLoaded(): Promise<void> {
+  if (usersLoaded) return;
+  usersLoaded = true;
+  try {
+    const raw = await secure.get(STORAGE_KEYS.mockUsers);
+    if (!raw) return;
+    const saved = JSON.parse(raw) as MockUser[];
+    // mockUsers referansı paylaşıldığı için yerinde güncellenir.
+    mockUsers.splice(0, mockUsers.length, ...mergeSavedUsers([...mockUsers], saved));
+  } catch {
+    // Bozuk kayıt varsa demo hesaplarıyla devam et — giriş tamamen kilitlenmesin.
+  }
+}
+
+async function persistRegisteredUsers(): Promise<void> {
+  await secure.set(
+    STORAGE_KEYS.mockUsers,
+    JSON.stringify(registeredOnly(mockUsers, SEED_IDS)),
+  );
+}
 
 export interface AuthUser {
   id: string;
@@ -65,7 +105,10 @@ export const authService = {
     api.post<AuthSession>('/auth/login', {
       noAuth: true,
       body: payload,
-      mock: () => {
+      mock: async () => {
+        // Kayıtlı hesaplar cihazdan yüklenmeden arama yapılırsa, daha önce
+        // açılmış bir hesapla giriş "şifre hatalı" gibi görünür.
+        await ensureUsersLoaded();
         const user = findByIdentifier(payload.email);
         if (!user || user.password !== payload.password) {
           throw new ApiError(401, 'E-posta/telefon veya şifre hatalı.');
@@ -78,7 +121,10 @@ export const authService = {
     api.post<AuthSession>('/auth/register', {
       noAuth: true,
       body: payload,
-      mock: () => {
+      mock: async () => {
+        // Tekillik kontrolü kayıtlı hesapları da kapsamalı; yoksa aynı
+        // e-postayla ikinci hesap açılabilirdi.
+        await ensureUsersLoaded();
         // Aynı e-postayla ikinci hesap açılamaz. Hata alanı `email` olarak
         // etiketlenir ki kayıt formu uyarıyı ilgili alanın altında gösterebilsin.
         if (isEmailTaken(payload.email)) {
@@ -107,6 +153,7 @@ export const authService = {
           phone: payload.phone.trim(),
         };
         mockUsers.push(user);
+        await persistRegisteredUsers();
         return sessionFor(user);
       },
     }),
@@ -122,12 +169,15 @@ export const authService = {
   changePassword: (payload: ChangePasswordPayload) =>
     api.post<void>('/auth/password/change', {
       body: payload,
-      mock: () => {
+      mock: async () => {
+        await ensureUsersLoaded();
         const user = findUserByEmail(payload.email);
         if (!user || user.password !== payload.currentPassword) {
           throw new ApiError(400, 'Mevcut şifre yanlış.');
         }
         user.password = payload.newPassword;
+        // Kalıcı yazılmazsa yeniden başlatınca eski parola geri gelirdi.
+        await persistRegisteredUsers();
       },
     }),
 
