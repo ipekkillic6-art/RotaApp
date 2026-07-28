@@ -32,6 +32,7 @@ import type {
   PaymentCard,
   PriceBreakdown,
 } from '../../types';
+import { contactErrors } from '../../utils/createDeliveryValidation';
 import type { CreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -69,6 +70,8 @@ export interface CreateDeliveryScreenProps {
   canProceed?: boolean;
   /** Sunucu/oluşturma hatası. */
   errorText?: string;
+  /** Oturumdaki kullanıcının adı — gönderici olarak gösterilir. */
+  senderName?: string;
   price?: PriceBreakdown | null;
   /** Fiyatın hesaplandığı mesafe — özet satırında gösterilir. */
   priceDistanceKm?: number;
@@ -99,6 +102,7 @@ export function CreateDeliveryScreen({
   onAddCard,
   canProceed = true,
   errorText,
+  senderName = 'Hesap sahibi',
   price,
   priceDistanceKm,
   priceLoading = false,
@@ -120,6 +124,18 @@ export function CreateDeliveryScreen({
   const selectedCard = savedCards.find((c) => c.id === form.paymentCardId);
 
   const selectPackage = (value: PackageTypeId) => onChange({ packageType: value });
+
+  /**
+   * İletişim adımı hataları. Henüz DOKUNULMAMIŞ (boş) alanda kırmızı
+   * gösterilmez — kullanıcı yazmaya başlamadan uyarmak gereksiz gürültü.
+   * Boş alan zaten "Devam et"i pasif tutuyor.
+   */
+  const allContactErrors = contactErrors(form);
+  const contactIssues = {
+    senderPhone: form.senderPhone.trim() ? allContactErrors.senderPhone : undefined,
+    recipientName: form.recipientName.trim() ? allContactErrors.recipientName : undefined,
+    recipientPhone: form.recipientPhone.trim() ? allContactErrors.recipientPhone : undefined,
+  };
 
   return (
     <ScreenScaffold
@@ -211,11 +227,20 @@ export function CreateDeliveryScreen({
                 <Typography variant="micro" tone="muted" overline>
                   Gönderici
                 </Typography>
-                <TextField label="Ad soyad" value="İpek Kılıç" onChangeText={() => {}} icon={User} />
+                {/* Gönderici hesabın sahibidir; burada değiştirilmez. */}
+                <TextField
+                  label="Ad soyad"
+                  value={senderName}
+                  onChangeText={() => {}}
+                  icon={User}
+                  disabled
+                  helperText="Hesabındaki ad kullanılır."
+                />
                 <PhoneField
                   label="Telefon"
                   value={form.senderPhone}
                   onChangeText={(t) => onChange({ senderPhone: t })}
+                  errorText={contactIssues.senderPhone}
                   required
                 />
               </Surface>
@@ -228,14 +253,21 @@ export function CreateDeliveryScreen({
                   value={form.recipientName}
                   onChangeText={(t) => onChange({ recipientName: t })}
                   icon={User}
+                  errorText={contactIssues.recipientName}
+                  textContentType="name"
                   required
                 />
                 <PhoneField
                   label="Telefon"
                   value={form.recipientPhone}
                   onChangeText={(t) => onChange({ recipientPhone: t })}
+                  errorText={contactIssues.recipientPhone}
                   required
-                  helperText="Teslimat kodu bu numaraya gönderilir."
+                  helperText={
+                    contactIssues.recipientPhone
+                      ? undefined
+                      : 'Teslimat kodu bu numaraya gönderilir, kurye bu numaradan arar.'
+                  }
                 />
               </Surface>
             </>
