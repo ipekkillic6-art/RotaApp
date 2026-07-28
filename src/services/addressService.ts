@@ -11,6 +11,9 @@ export interface CreateAddressPayload {
   contactName?: string;
   contactPhone?: string;
   note?: string;
+  /** Haritadan/GPS'ten seçilen tam nokta — kurye buraya yönlendirilir. */
+  latitude?: number;
+  longitude?: number;
 }
 
 export const addressService = {

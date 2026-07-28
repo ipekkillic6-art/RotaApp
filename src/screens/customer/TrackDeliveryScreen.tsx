@@ -21,6 +21,7 @@ import {
 } from '../../design-system';
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import { formatDuration } from '../../utils/format';
+import { coordOf } from '../../utils/geo';
 import type { Delivery } from '../../types';
 
 export interface TrackDeliveryScreenProps {
@@ -31,6 +32,8 @@ export interface TrackDeliveryScreenProps {
   onCallCourier?: () => void;
   onMessageCourier?: () => void;
   onSupport?: () => void;
+  /** Konum izni reddedildiğinde haritadaki "İzin ver" bağlantısı. */
+  onRequestLocationPermission?: () => void;
 }
 
 /**
@@ -49,6 +52,7 @@ export function TrackDeliveryScreen({
   onCallCourier,
   onMessageCourier,
   onSupport,
+  onRequestLocationPermission,
 }: TrackDeliveryScreenProps) {
   const theme = useTheme();
   const courier = delivery.courier;
@@ -74,6 +78,9 @@ export function TrackDeliveryScreen({
         <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.md }}>
           <MapPreview
             height={200}
+            pickup={coordOf(delivery.pickupAddress)}
+            dropoff={coordOf(delivery.dropoffAddress)}
+            courier={inTransit ? coordOf(delivery.courier) : undefined}
             showCourier={inTransit}
             caption={
               inTransit
@@ -81,7 +88,7 @@ export function TrackDeliveryScreen({
                 : undefined
             }
             permissionDenied={locationPermission === 'denied'}
-            onRequestPermission={() => {}}
+            onRequestPermission={onRequestLocationPermission}
           />
 
           {delivery.isDelayed && (

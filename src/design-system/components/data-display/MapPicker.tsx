@@ -19,8 +19,13 @@ export interface MapPickerProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** İstanbul (Sultanahmet civarı) — başlangıç konumu yoksa. */
-const DEFAULT_COORD: LatLng = { latitude: 41.0082, longitude: 28.9784 };
+/**
+ * İstanbul (Sultanahmet civarı) — başlangıç konumu yoksa haritanın merkezi.
+ *
+ * Dışa açık: çağıran taraf, kullanıcı haritayı hiç kaydırmadan onaylarsa aynı
+ * noktaya geri düşebilsin diye bu değeri bilmek zorunda.
+ */
+export const DEFAULT_MAP_COORD: LatLng = { latitude: 41.0082, longitude: 28.9784 };
 
 const makeStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -45,7 +50,7 @@ const makeStyles = (theme: Theme) =>
  *
  * iOS'ta Apple Maps (anahtar gerektirmez), Android'de Google Maps.
  */
-export function MapPicker({ initialCoord = DEFAULT_COORD, onChange, style }: MapPickerProps) {
+export function MapPicker({ initialCoord = DEFAULT_MAP_COORD, onChange, style }: MapPickerProps) {
   const theme = useTheme();
   const styles = makeStyles(theme);
 

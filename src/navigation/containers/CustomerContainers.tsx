@@ -27,7 +27,7 @@ import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useReverseGeocode } from '../../hooks/useReverseGeocode';
 import { useCreateDeliveryForm } from '../../hooks/useCreateDeliveryForm';
 import { useAddressForm } from '../../hooks/useAddressForm';
-import type { LatLng } from '../../design-system';
+import { DEFAULT_MAP_COORD, type LatLng } from '../../design-system';
 import { recentAddresses } from '../../mocks/addresses';
 import { quickReplies } from '../../mocks/chat';
 import type { Address, Delivery } from '../../types';
@@ -173,28 +173,37 @@ export function AddressPickerContainer() {
   const { resolve, loading, permission } = useCurrentLocation();
   const saved = useAddressStore((s) => s.saved);
   const fetchSaved = useAddressStore((s) => s.fetchSaved);
+  const setPickedLocation = useAddressStore((s) => s.setPickedLocation);
 
   // Kayıtlı adresleri yükle — yeni eklenen adres de burada görünür.
   useEffect(() => {
     fetchSaved();
   }, [fetchSaved]);
 
+  // GPS sonucunu köprüye koy ve yeni adres formunu aç — eskiden çözülen adres
+  // kullanılmadan ekran kapanıyordu.
   const useCurrent = useCallback(async () => {
     const address = await resolve();
-    if (address) navigation.goBack();
+    if (address) {
+      setPickedLocation(address);
+      navigation.navigate(ROUTES.ADD_ADDRESS);
+    }
     // İzin reddedilirse ekran locationPermission='denied' ile durumu gösterir.
-  }, [resolve, navigation]);
+  }, [resolve, setPickedLocation, navigation]);
 
   return (
     <AddressPickerScreen
+      // Profil → Adreslerim: adres defteri. Onay butonu yok, satır düzenler.
+      mode="book"
       savedAddresses={saved.length ? saved : undefined}
-      locationPermission={permission === 'denied' ? 'denied' : 'granted'}
+      locationPermission={permission}
       locating={loading}
       onUseCurrentLocation={useCurrent}
+      onPickOnMap={() => navigation.navigate(ROUTES.MAP_PICKER)}
+      onRequestLocationPermission={useCurrent}
       onAddAddress={() => navigation.navigate(ROUTES.ADD_ADDRESS)}
       onEditAddress={(a) => navigation.navigate(ROUTES.ADD_ADDRESS, { addressId: a.id })}
       onClose={() => navigation.goBack()}
-      onSelect={() => navigation.goBack()}
     />
   );
 }
@@ -224,13 +233,16 @@ function AddAddressForm({ initial }: { initial?: Address }) {
   const pickedLocation = useAddressStore((s) => s.pickedLocation);
   const clearPickedLocation = useAddressStore((s) => s.clearPickedLocation);
 
-  // Haritadan dönen konumu forma yaz, sonra köprüyü temizle.
+  // Haritadan dönen konumu forma yaz, sonra köprüyü temizle. Koordinat metinle
+  // BİRLİKTE yazılır — hem kaydedilsin hem de applyAddressPatch onu düşürmesin.
   useEffect(() => {
     if (pickedLocation) {
       update({
         fullAddress: pickedLocation.fullAddress,
         city: pickedLocation.city,
         district: pickedLocation.district,
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
       });
       clearPickedLocation();
     }
@@ -243,6 +255,8 @@ function AddAddressForm({ initial }: { initial?: Address }) {
         fullAddress: address.fullAddress,
         city: address.city,
         district: address.district,
+        latitude: address.latitude,
+        longitude: address.longitude,
       });
     }
   }, [resolve, update]);
@@ -289,15 +303,13 @@ export function MapPickerContainer() {
       ? { latitude: params.lat, longitude: params.lng }
       : undefined;
 
-  const [coord, setCoord] = useState<LatLng | undefined>(initialCoord);
+  // Haritanın merkezi zaten seçili sayılır: kullanıcı hiç kaydırmadan
+  // onaylarsa sessizce hiçbir şey olmasın.
+  const [coord, setCoord] = useState<LatLng>(initialCoord ?? DEFAULT_MAP_COORD);
   const { resolve, loading } = useReverseGeocode();
   const setPickedLocation = useAddressStore((s) => s.setPickedLocation);
 
   const onConfirm = useCallback(async () => {
-    if (!coord) {
-      navigation.goBack();
-      return;
-    }
     const address = await resolve(coord.latitude, coord.longitude);
     if (address) setPickedLocation(address);
     navigation.goBack();
@@ -320,6 +332,8 @@ export function TrackContainer() {
   const current = useDeliveryStore((s) => s.current);
   const fetchById = useDeliveryStore((s) => s.fetchById);
   const { online } = useNetworkStatus();
+  // resolve() izni de istiyor; harita üzerindeki "İzin ver" bunu tetikler.
+  const { resolve: requestLocationPermission } = useCurrentLocation();
 
   // Mount'ta çek + 15 sn'de bir yenile (socket Faz 6'da).
   useEffect(() => {
@@ -350,6 +364,8 @@ export function TrackContainer() {
           : undefined
       }
       onSupport={() => navigation.navigate(ROUTES.HELP_SUPPORT)}
+      // Haritadaki "İzin ver" gerçekten izin istesin.
+      onRequestLocationPermission={requestLocationPermission}
     />
   );
 }

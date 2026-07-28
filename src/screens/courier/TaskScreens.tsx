@@ -39,8 +39,23 @@ import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import { CameraCaptureModal } from '../_shared/CameraCaptureModal';
 import { SignaturePad } from '../_shared/SignaturePad';
 import { formatDistance, formatDuration } from '../../utils/format';
+import { coordOf } from '../../utils/geo';
 import type { Delivery, FailureReason } from '../../types';
 import { FAILURE_REASONS } from '../../design-system/domain/delivery/status';
+
+/**
+ * Alış adımının harita başlığı: kuryenin alış noktasına uzaklığı ve süresi.
+ * Görevde bu veriler yoksa başlık hiç gösterilmez — uydurma sayı yazmaktansa
+ * boş bırakmak doğru.
+ */
+function pickupEtaCaption(task: Delivery): string | undefined {
+  const km = task.courier?.distanceKm;
+  const eta = task.courier?.etaMinutes;
+  if (km == null && eta == null) return undefined;
+  return [km != null ? formatDistance(km) : null, eta != null ? formatDuration(eta) : null]
+    .filter(Boolean)
+    .join(' · ');
+}
 
 /* ── Task list ──────────────────────────────────────────────────────────── */
 
@@ -261,7 +276,14 @@ export function PickupScreen({
     >
       <ScrollContainer>
         <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.md }}>
-          <MapPreview height={160} caption={`${formatDistance(1.2)} · 6 dk`} showCourier />
+          {/* Alış adımı: kurye → alış noktası. Mesafe/süre görevin kendi
+              verisinden gelir; sabit "1,2 km · 6 dk" yazmak yanlış bilgiydi. */}
+          <MapPreview
+            height={160}
+            pickup={coordOf(task.courier)}
+            dropoff={coordOf(task.pickupAddress)}
+            caption={pickupEtaCaption(task)}
+          />
 
           <AddressCard address={task.pickupAddress} variant="pickup" />
 
@@ -411,8 +433,12 @@ export function OnTheWayScreen({
     >
       <ScrollContainer>
         <View style={{ gap: theme.spacing.lg, paddingTop: theme.spacing.md }}>
+          {/* Yolda adımı: alış → kurye → teslimat. */}
           <MapPreview
             height={220}
+            pickup={coordOf(task.pickupAddress)}
+            dropoff={coordOf(task.dropoffAddress)}
+            courier={coordOf(task.courier)}
             showCourier
             caption={`Tahmini varış ${formatDuration(task.estimatedDurationMinutes)}`}
           />

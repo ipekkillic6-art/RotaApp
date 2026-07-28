@@ -16,6 +16,12 @@ export interface AddressForm {
   contactName: string;
   contactPhone: string;
   note: string;
+  /**
+   * Haritadan veya GPS'ten gelen tam nokta. Metin alanları elle değiştirilirse
+   * düşürülür — bkz. `applyAddressPatch`.
+   */
+  latitude?: number;
+  longitude?: number;
 }
 
 export const INITIAL_ADDRESS_FORM: AddressForm = {
@@ -26,7 +32,26 @@ export const INITIAL_ADDRESS_FORM: AddressForm = {
   contactName: '',
   contactPhone: '',
   note: '',
+  latitude: undefined,
+  longitude: undefined,
 };
+
+/**
+ * Forma yama uygular.
+ *
+ * Kural: açık adres ELLE değiştirilirse eski koordinat artık o adrese ait
+ * değildir ve düşürülür. Haritadan/GPS'ten gelen güncelleme metni ve
+ * koordinatı BİRLİKTE yazdığı için bu kurala takılmaz.
+ */
+export function applyAddressPatch(form: AddressForm, patch: Partial<AddressForm>): AddressForm {
+  const textChangedAlone = 'fullAddress' in patch && !('latitude' in patch);
+  const next = { ...form, ...patch };
+  if (textChangedAlone) {
+    next.latitude = undefined;
+    next.longitude = undefined;
+  }
+  return next;
+}
 
 /** Doğrulanan alanlar — ekranda `errorText` bu anahtarlarla eşlenir. */
 export type AddressFieldKey = 'title' | 'fullAddress' | 'city' | 'district' | 'contactPhone';
@@ -73,7 +98,12 @@ export function canSubmitAddress(form: AddressForm): boolean {
   return Object.keys(addressErrors(form)).length === 0;
 }
 
-/** Mevcut adres → form (düzenleme ekranını ön-doldurmak için). */
+/**
+ * Mevcut adres → form (düzenleme ekranını ön-doldurmak için).
+ *
+ * Koordinat da taşınır: aksi halde bir adresin yalnızca başlığını düzeltip
+ * kaydetmek, haritadan seçilmiş konumunu silerdi.
+ */
 export function addressToForm(address: Address): AddressForm {
   return {
     title: address.title,
@@ -83,6 +113,8 @@ export function addressToForm(address: Address): AddressForm {
     contactName: address.contactName ?? '',
     contactPhone: address.contactPhone ?? '',
     note: address.note ?? '',
+    latitude: address.latitude,
+    longitude: address.longitude,
   };
 }
 
@@ -96,5 +128,7 @@ export function toCreateAddressPayload(form: AddressForm): CreateAddressPayload 
     contactName: form.contactName.trim() || undefined,
     contactPhone: form.contactPhone.trim() || undefined,
     note: form.note.trim() || undefined,
+    latitude: form.latitude,
+    longitude: form.longitude,
   };
 }

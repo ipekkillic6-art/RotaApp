@@ -70,6 +70,9 @@ export interface Courier {
   distanceKm?: number;
   /** Minutes until the courier reaches the next waypoint. */
   etaMinutes?: number;
+  /** Son bilinen konum — takip haritası kuryeyi buraya çizer. */
+  latitude?: number;
+  longitude?: number;
 }
 
 /**

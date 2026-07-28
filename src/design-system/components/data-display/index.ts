@@ -13,4 +13,4 @@ export {
 export { MetricCard, type MetricCardProps, type MetricTone } from './MetricCard';
 export { Timeline, type TimelineProps, type TimelineItem } from './Timeline';
 export { MapPreview, type MapPreviewProps } from './MapPreview';
-export { MapPicker, type MapPickerProps, type LatLng } from './MapPicker';
+export { MapPicker, DEFAULT_MAP_COORD, type MapPickerProps, type LatLng } from './MapPicker';

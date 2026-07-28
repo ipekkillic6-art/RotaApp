@@ -21,6 +21,8 @@ export const couriers = {
     phone: '+90 530 441 08 25',
     distanceKm: 1.2,
     etaMinutes: 6,
+    latitude: 41.0421,
+    longitude: 29.0021,
   },
   selin: {
     id: 'crr-02',
@@ -35,6 +37,8 @@ export const couriers = {
     phone: '+90 542 330 77 61',
     distanceKm: 0.8,
     etaMinutes: 4,
+    latitude: 41.0655,
+    longitude: 29.0148,
   },
   /** No avatar — exercises the initials fallback. */
   hakan: {
@@ -49,6 +53,8 @@ export const couriers = {
     phone: '+90 536 118 40 92',
     distanceKm: 3.4,
     etaMinutes: 12,
+    latitude: 41.0198,
+    longitude: 28.9712,
   },
   ayse: {
     id: 'crr-04',
@@ -63,6 +69,8 @@ export const couriers = {
     phone: '+90 555 902 13 77',
     distanceKm: 2.1,
     etaMinutes: 9,
+    latitude: 40.9987,
+    longitude: 29.0335,
   },
   emre: {
     id: 'crr-05',
