@@ -15,9 +15,11 @@ import { ChangePasswordScreen } from '../../screens/shared/ChangePasswordScreen'
 import { HelpSupportScreen } from '../../screens/shared/HelpSupportScreen';
 import { PaymentMethodsScreen } from '../../screens/shared/PaymentMethodsScreen';
 import { AddCardScreen } from '../../screens/shared/AddCardScreen';
+import { MembershipScreen } from '../../screens/shared/MembershipScreen';
 import { useAuthStore } from '../../stores/authStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { usePaymentStore } from '../../stores/paymentStore';
+import { useMembershipStore } from '../../stores/membershipStore';
 import { useCardForm } from '../../hooks/useCardForm';
 import { faqItems } from '../../mocks/support';
 import { SUPPORT } from '../../constants/config';
@@ -183,6 +185,7 @@ export function ProfileContainer() {
       role={role ?? 'customer'}
       onSelectItem={(key) => {
         if (key === 'addresses') navigation.navigate(ROUTES.ADDRESS_PICKER);
+        else if (key === 'membership') navigation.navigate(ROUTES.MEMBERSHIP);
         else if (key === 'payment') navigation.navigate(ROUTES.PAYMENT_METHODS);
         else if (key === 'notifications') navigation.navigate(ROUTES.NOTIFICATIONS);
         else if (key === 'privacy') navigation.navigate(ROUTES.PRIVACY_SECURITY);
@@ -219,6 +222,46 @@ export function PaymentMethodsContainer() {
           { text: 'Sil', style: 'destructive', onPress: () => removeCard(id) },
         ])
       }
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+export function MembershipContainer() {
+  const navigation = useNavigation<Nav>();
+  const plans = useMembershipStore((s) => s.plans);
+  const membership = useMembershipStore((s) => s.membership);
+  const loading = useMembershipStore((s) => s.loading);
+  const saving = useMembershipStore((s) => s.saving);
+  const error = useMembershipStore((s) => s.error);
+  const fetchMembership = useMembershipStore((s) => s.fetch);
+  const subscribe = useMembershipStore((s) => s.subscribe);
+  const cancel = useMembershipStore((s) => s.cancel);
+
+  // Tahsilat varsayılan karttan yapılır; kart listesi de gerekir.
+  const cards = usePaymentStore((s) => s.cards);
+  const fetchCards = usePaymentStore((s) => s.fetchCards);
+  const defaultCard = cards.find((c) => c.isDefault) ?? cards[0];
+
+  useEffect(() => {
+    fetchMembership();
+    fetchCards();
+  }, [fetchMembership, fetchCards]);
+
+  return (
+    <MembershipScreen
+      plans={plans}
+      membership={membership}
+      defaultCard={defaultCard}
+      loading={loading}
+      saving={saving}
+      errorText={error}
+      onSubscribe={(planId) => {
+        if (!defaultCard) return;
+        subscribe({ planId, cardId: defaultCard.id });
+      }}
+      onCancel={() => cancel()}
+      onAddCard={() => navigation.navigate(ROUTES.ADD_CARD)}
       onBack={() => navigation.goBack()}
     />
   );

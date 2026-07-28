@@ -15,6 +15,7 @@ import {
   HelpSupportContainer,
   PaymentMethodsContainer,
   AddCardContainer,
+  MembershipContainer,
 } from './containers/SharedContainers';
 import {
   CreateContainer,
@@ -91,6 +92,7 @@ export function RootNavigator() {
           <Stack.Screen name="HelpSupport" component={HelpSupportContainer} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsContainer} />
           <Stack.Screen name="AddCard" component={AddCardContainer} />
+          <Stack.Screen name="Membership" component={MembershipContainer} />
 
           {/* Courier stack */}
           <Stack.Screen name="JobOffer" component={JobOfferContainer} />

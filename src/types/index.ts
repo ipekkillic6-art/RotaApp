@@ -226,3 +226,40 @@ export interface PaymentCard {
   holderName: string;
   isDefault: boolean;
 }
+
+/* ── Üyelik (Rota Plus) ─────────────────────────────────────────────────── */
+
+export type MembershipPlanId = 'monthly' | 'yearly';
+
+/**
+ * Üyelik durumu.
+ *
+ * `cancelled`, "iptal edildi ama dönem sonuna kadar avantajlar sürüyor"
+ * demektir — üyelik o tarihte `none`'a düşer. İptalin anında hakları
+ * kaldırmaması bilinçli: kullanıcı ödediği dönemi kullanır.
+ */
+export type MembershipStatus = 'none' | 'active' | 'cancelled';
+
+export interface MembershipPlan {
+  id: MembershipPlanId;
+  name: string;
+  /** Dönem başına ücret (TRY). */
+  price: number;
+  period: 'month' | 'year';
+  /** Aylık eşdeğer ücret — planları yan yana kıyaslamak için. */
+  monthlyEquivalent: number;
+  benefits: string[];
+}
+
+export interface Membership {
+  status: MembershipStatus;
+  planId?: MembershipPlanId;
+  /** ISO tarih. */
+  startedAt?: string;
+  /** Bir sonraki tahsilat tarihi (yalnızca `active`). */
+  renewsAt?: string;
+  /** Avantajların biteceği tarih (yalnızca `cancelled`). */
+  endsAt?: string;
+  /** Tahsilatın yapıldığı kartın id'si. */
+  cardId?: string;
+}

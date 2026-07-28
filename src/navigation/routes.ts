@@ -17,6 +17,7 @@ export const ROUTES = {
   HELP_SUPPORT: 'HelpSupport',
   PAYMENT_METHODS: 'PaymentMethods',
   ADD_CARD: 'AddCard',
+  MEMBERSHIP: 'Membership',
 
   // rol tab host'ları
   CUSTOMER_TABS: 'CustomerTabs',
