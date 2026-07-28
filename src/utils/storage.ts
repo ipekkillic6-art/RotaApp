@@ -52,6 +52,13 @@ export const STORAGE_KEYS = {
    * bulunmaz.
    */
   rememberedIdentifier: 'auth.rememberedIdentifier',
+  /**
+   * Mock backend'de açılan hesaplar (yalnızca `USE_MOCKS` açıkken).
+   *
+   * Gerçek backend geldiğinde bu anahtar tamamen kalkar — hesaplar sunucuda
+   * durur. Parola içerdiği için AsyncStorage'a değil `secure`'a yazılır.
+   */
+  mockUsers: 'mock.users',
   courierOnline: 'courier.online',
   offlineQueue: 'queue.statusUpdates',
 } as const;

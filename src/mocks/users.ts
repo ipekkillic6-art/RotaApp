@@ -49,6 +49,22 @@ export const findUserByPhone = (phone: string): MockUser | undefined => {
 export const isPhoneTaken = (phone: string): boolean => findUserByPhone(phone) !== undefined;
 
 /**
+ * Cihazda saklanan hesapları mevcut listeye ekler (id'ye göre tekilleştirerek).
+ *
+ * Demo hesapları koddan gelir; yalnızca eksik olanlar eklenir ki seed verisi
+ * değiştiğinde güncel hali görünsün ve kayıtlar iki kez listelenmesin.
+ */
+export function mergeSavedUsers(current: MockUser[], saved: MockUser[]): MockUser[] {
+  const seen = new Set(current.map((u) => u.id));
+  return [...current, ...saved.filter((u) => !seen.has(u.id))];
+}
+
+/** Saklanacak hesaplar: koddan gelen demo hesapları hariç, kayıtla açılanlar. */
+export function registeredOnly(all: MockUser[], seedIds: Set<string>): MockUser[] {
+  return all.filter((u) => !seedIds.has(u.id));
+}
+
+/**
  * Demo hesapları. Hepsinin parolası `rota1234`.
  * Giriş: e-posta VEYA telefon + parola.
  */
