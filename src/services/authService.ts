@@ -1,5 +1,11 @@
 import { api, ApiError } from '../utils/api';
-import { mockUsers, type MockUser } from '../mocks/users';
+import {
+  findUserByEmail,
+  isEmailTaken,
+  mockUsers,
+  normalizeEmail,
+  type MockUser,
+} from '../mocks/users';
 import type { UserRole } from '../types';
 
 export interface AuthUser {
@@ -70,14 +76,20 @@ export const authService = {
       noAuth: true,
       body: payload,
       mock: () => {
-        const email = payload.email.trim().toLowerCase();
-        if (mockUsers.some((u) => u.email.toLowerCase() === email)) {
-          throw new ApiError(409, 'Bu e-posta zaten kayıtlı.');
+        // Aynı e-postayla ikinci hesap açılamaz. Hata alanı `email` olarak
+        // etiketlenir ki kayıt formu uyarıyı ilgili alanın altında gösterebilsin.
+        if (isEmailTaken(payload.email)) {
+          throw new ApiError(
+            409,
+            'Bu e-posta ile zaten bir hesap var. Giriş yapmayı deneyebilirsin.',
+            { field: 'email' },
+          );
         }
         const user: MockUser = {
           id: `u-${Date.now()}`,
           name: payload.name,
-          email: payload.email.trim(),
+          // Kayıtlı adres normalize saklanır; liste tek biçimli kalır.
+          email: normalizeEmail(payload.email),
           password: payload.password,
           role: payload.role,
           phone: '',
@@ -99,9 +111,7 @@ export const authService = {
     api.post<void>('/auth/password/change', {
       body: payload,
       mock: () => {
-        const user = mockUsers.find(
-          (u) => u.email.toLowerCase() === payload.email.trim().toLowerCase(),
-        );
+        const user = findUserByEmail(payload.email);
         if (!user || user.password !== payload.currentPassword) {
           throw new ApiError(400, 'Mevcut şifre yanlış.');
         }

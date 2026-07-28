@@ -85,12 +85,19 @@ export function RegisterContainer() {
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
   const error = useAuthStore((s) => s.error);
+  const errorField = useAuthStore((s) => s.errorField);
   const [errors, setErrors] = useState<RegisterErrors>({});
+
+  // Sunucu hatayı bir alana bağladıysa (örn. e-posta zaten kayıtlı) uyarıyı
+  // o alanın altında göster; üstteki genel banda düşürme.
+  const fieldErrors: RegisterErrors =
+    errorField === 'email' && error ? { ...errors, email: error } : errors;
+
   return (
     <RegisterScreen
       loading={loading}
-      errors={errors}
-      errorText={error}
+      errors={fieldErrors}
+      errorText={errorField ? undefined : error}
       onBack={() => navigation.goBack()}
       onSubmit={({ fullName, email, password }) => {
         const next: RegisterErrors = {};
