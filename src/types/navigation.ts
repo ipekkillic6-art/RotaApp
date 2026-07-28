@@ -39,6 +39,8 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+  ChangePassword: undefined;
   RoleSelect: undefined;
   PrivacySecurity: undefined;
   HelpSupport: undefined;
