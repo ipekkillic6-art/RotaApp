@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { fontFamily } from '../../tokens';
 import { FieldShell } from './FieldShell';
 
@@ -59,7 +59,7 @@ export function OtpInput({
   onComplete,
 }: OtpInputProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const inputRef = useRef<TextInput>(null);
 
   const digits = value.padEnd(length, ' ').slice(0, length).split('');

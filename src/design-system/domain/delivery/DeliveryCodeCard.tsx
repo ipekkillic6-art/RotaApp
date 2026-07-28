@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { KeyRound, ShieldCheck } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Surface } from '../../foundations/Surface';
 import { Typography } from '../../foundations/Typography';
@@ -41,7 +41,7 @@ const makeStyles = (theme: Theme) =>
  */
 export function DeliveryCodeCard({ code, hidden = false, style }: DeliveryCodeCardProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   const digits = code ? code.split('') : [];
 

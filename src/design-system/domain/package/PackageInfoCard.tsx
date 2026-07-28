@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Surface } from '../../foundations/Surface';
 import { Typography } from '../../foundations/Typography';
@@ -43,7 +43,7 @@ export function PackageInfoCard({
   style,
 }: PackageInfoCardProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const meta = packageTypeMeta(type);
 
   return (

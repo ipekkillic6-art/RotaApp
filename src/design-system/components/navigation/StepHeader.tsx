@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { ChevronLeft, X } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 import { IconButton } from '../buttons/IconButton';
 import { StepProgress } from '../feedback/Progress';
@@ -53,8 +53,7 @@ export function StepHeader({
   onClose,
   style,
 }: StepHeaderProps) {
-  const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={[styles.root, style]}>

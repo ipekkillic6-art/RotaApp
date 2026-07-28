@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, type DimensionValue } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 
 export interface SkeletonProps {
   width?: DimensionValue;
@@ -21,7 +21,7 @@ const makeStyles = (_theme: Theme) => StyleSheet.create({ base: { overflow: 'hid
  */
 export function Skeleton({ width = '100%', height = 14, radius, style }: SkeletonProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const pulse = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {

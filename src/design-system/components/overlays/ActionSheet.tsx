@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Divider } from '../../foundations/Layout';
 import { Touchable } from '../../foundations/Touchable';
@@ -55,7 +55,7 @@ export function ActionSheet({
   cancelLabel = 'Vazgeç',
 }: ActionSheetProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title={title} description={description}>

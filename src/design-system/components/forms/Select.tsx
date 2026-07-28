@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Check, ChevronDown, type LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
@@ -74,7 +74,7 @@ export function FieldTrigger({
   trailingIcon = ChevronDown,
 }: TriggerProps & { displayValue?: string; trailingIcon?: LucideIcon }) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const borderColor = useFieldBorder({ status: errorText ? 'error' : 'default', disabled });
   const hasValue = !!displayValue;
 
@@ -218,7 +218,7 @@ export function OptionList<T extends string = string>({
   multi?: boolean;
 }) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={{ gap: theme.spacing['2xs'] }}>

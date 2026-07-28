@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { X } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
 import { IconButton } from '../buttons/IconButton';
@@ -89,7 +89,7 @@ export function BottomSheet({
   style,
 }: BottomSheetProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const { height } = useWindowDimensions();
   const progress = useRef(new Animated.Value(0)).current;
 
