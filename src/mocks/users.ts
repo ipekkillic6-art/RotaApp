@@ -10,6 +10,23 @@ export interface MockUser {
   phone: string;
 }
 
+/** E-postayı karşılaştırma için tekilleştirir: kırpılmış + küçük harf. */
+export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+/**
+ * E-posta ile kullanıcı bul. Büyük/küçük harf ve baştaki/sondaki boşluk
+ * farkları aynı hesap sayılır — `Ipek@Rota.app ` ile `ipek@rota.app` tek
+ * hesaptır, aksi halde aynı adresle ikinci bir hesap açılabilirdi.
+ */
+export const findUserByEmail = (email: string): MockUser | undefined => {
+  const value = normalizeEmail(email);
+  if (!value) return undefined;
+  return mockUsers.find((u) => normalizeEmail(u.email) === value);
+};
+
+/** Bu e-posta ile zaten bir hesap var mı? */
+export const isEmailTaken = (email: string): boolean => findUserByEmail(email) !== undefined;
+
 /**
  * Demo hesapları. Hepsinin parolası `rota1234`.
  * Giriş: e-posta VEYA telefon + parola.

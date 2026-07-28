@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { authService, type AuthUser, type LoginPayload, type RegisterPayload } from '../services/authService';
+import { ApiError } from '../utils/api';
 import { secure, storage, STORAGE_KEYS } from '../utils/storage';
 import type { UserRole } from '../types';
+
+/**
+ * Sunucu hatayı belirli bir forma alanına bağladıysa o alanın adı.
+ * Örn. kayıt sırasında e-posta çakışması → `'email'`.
+ */
+function errorFieldOf(e: unknown): string | undefined {
+  if (!(e instanceof ApiError)) return undefined;
+  const body = e.body;
+  if (typeof body !== 'object' || body === null) return undefined;
+  const field = (body as { field?: unknown }).field;
+  return typeof field === 'string' ? field : undefined;
+}
 
 interface AuthState {
   user: AuthUser | null;
@@ -11,6 +24,8 @@ interface AuthState {
   restoring: boolean;
   loading: boolean;
   error?: string;
+  /** Hata bir forma alanına aitse alanın adı (örn. `'email'`). */
+  errorField?: string;
 
   restore: () => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
@@ -27,6 +42,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   restoring: true,
   loading: false,
   error: undefined,
+  errorField: undefined,
 
   restore: async () => {
     try {
@@ -46,7 +62,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   login: async (payload) => {
-    set({ loading: true, error: undefined });
+    set({ loading: true, error: undefined, errorField: undefined });
     try {
       const session = await authService.login(payload);
       await secure.set(STORAGE_KEYS.authToken, session.token);
@@ -60,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   register: async (payload) => {
-    set({ loading: true, error: undefined });
+    set({ loading: true, error: undefined, errorField: undefined });
     try {
       const session = await authService.register(payload);
       await secure.set(STORAGE_KEYS.authToken, session.token);
@@ -68,12 +84,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await storage.set(STORAGE_KEYS.user, session.user);
       set({ user: session.user, role: null, loading: false });
     } catch (e) {
-      set({ loading: false, error: e instanceof Error ? e.message : 'Kayıt başarısız' });
+      set({
+        loading: false,
+        error: e instanceof Error ? e.message : 'Kayıt başarısız',
+        errorField: errorFieldOf(e),
+      });
     }
   },
 
   requestPasswordReset: async (email) => {
-    set({ loading: true, error: undefined });
+    set({ loading: true, error: undefined, errorField: undefined });
     try {
       await authService.requestPasswordReset(email);
       set({ loading: false });
@@ -87,7 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   changePassword: async (currentPassword, newPassword) => {
     const email = get().user?.email;
     if (!email) return false;
-    set({ loading: true, error: undefined });
+    set({ loading: true, error: undefined, errorField: undefined });
     try {
       await authService.changePassword({ email, currentPassword, newPassword });
       set({ loading: false });
@@ -106,7 +126,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await secure.remove(STORAGE_KEYS.refreshToken);
       await storage.remove(STORAGE_KEYS.user);
       await storage.remove(STORAGE_KEYS.role);
-      set({ user: null, role: null, error: undefined });
+      set({ user: null, role: null, error: undefined, errorField: undefined });
     }
   },
 
