@@ -44,6 +44,14 @@ export const STORAGE_KEYS = {
   refreshToken: 'auth.refreshToken',
   user: 'auth.user',
   role: 'auth.role',
+  /**
+   * "Beni hatırla" ile saklanan e-posta/telefon.
+   *
+   * Yalnızca kimlik alanı tutulur — parola BURAYA YAZILMAZ. Parolayı iOS
+   * Keychain (AutoFill) saklar; uygulamanın kendi deposunda parola kopyası
+   * bulunmaz.
+   */
+  rememberedIdentifier: 'auth.rememberedIdentifier',
   courierOnline: 'courier.online',
   offlineQueue: 'queue.statusUpdates',
 } as const;

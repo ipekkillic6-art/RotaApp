@@ -23,7 +23,13 @@ export interface LoginScreenProps {
   /** Server-side failure, shown above the form. */
   errorText?: string;
   loading?: boolean;
-  onSubmit?: (credentials: { identifier: string; password: string }) => void;
+  /** "Beni hatırla" ile saklanmış kimlik — alanı önceden doldurur. */
+  initialIdentifier?: string;
+  onSubmit?: (credentials: {
+    identifier: string;
+    password: string;
+    remember: boolean;
+  }) => void;
   onForgotPassword?: () => void;
   onRegister?: () => void;
 }
@@ -44,7 +50,14 @@ const makeLoginStyles = (theme: Theme) =>
       justifyContent: 'center',
     },
     form: { gap: theme.spacing.lg },
-    forgotRow: { alignItems: 'flex-end' },
+    rememberRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.md,
+    },
+    /** Checkbox'ın etiketi flex:1 — Touchable'a genişlik verilmezse yazı 0'a büzülür. */
+    rememberCheckbox: { flex: 1 },
     dividerRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
     dividerLine: { flex: 1 },
   });
@@ -59,23 +72,30 @@ const makeLoginStyles = (theme: Theme) =>
 export function LoginScreen({
   errorText,
   loading = false,
+  initialIdentifier,
   onSubmit,
   onForgotPassword,
   onRegister,
 }: LoginScreenProps) {
   const theme = useTheme();
   const styles = useThemedStyles(makeLoginStyles);
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(initialIdentifier ?? '');
   const [password, setPassword] = useState('');
+  // Hatırlanmış bir kimlik varsa kullanıcı bunu daha önce istemiştir.
+  const [remember, setRemember] = useState(Boolean(initialIdentifier));
 
   // Button memoize edilmiş; onPress her tuşta yeni referans alırsa memo boşa
   // çıkar ve buton her karakterde yeniden render olur. Güncel değerleri bir
   // ref'te tutup callback'i kalıcı olarak sabitliyoruz.
-  const latest = useRef({ identifier, password, onSubmit });
-  latest.current = { identifier, password, onSubmit };
+  const latest = useRef({ identifier, password, remember, onSubmit });
+  latest.current = { identifier, password, remember, onSubmit };
   const submit = useCallback(() => {
     const current = latest.current;
-    current.onSubmit?.({ identifier: current.identifier, password: current.password });
+    current.onSubmit?.({
+      identifier: current.identifier,
+      password: current.password,
+      remember: current.remember,
+    });
   }, []);
 
   return (
@@ -95,6 +115,8 @@ export function LoginScreen({
           <View style={styles.form}>
             {errorText && <InlineAlert tone="error" message={errorText} />}
 
+            {/* AutoFill: iOS bu iki alanı görünce girişten sonra parolayı
+                Keychain'e kaydetmeyi önerir ve sonraki girişte doldurur. */}
             <TextField
               label="Telefon veya e-posta"
               placeholder="ornek@sirket.com"
@@ -103,6 +125,8 @@ export function LoginScreen({
               onChangeText={setIdentifier}
               autoCapitalize="none"
               keyboardType="email-address"
+              textContentType="username"
+              autoComplete="username"
               required
             />
             <TextField
@@ -112,10 +136,19 @@ export function LoginScreen({
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              textContentType="password"
+              autoComplete="current-password"
               required
             />
 
-            <View style={styles.forgotRow}>
+            <View style={styles.rememberRow}>
+              <Checkbox
+                label="Beni hatırla"
+                checked={remember}
+                onChange={setRemember}
+                accessibilityLabel="Beni hatırla — e-postanı bir dahaki girişte hazır tutar"
+                style={styles.rememberCheckbox}
+              />
               <Button
                 label="Şifremi unuttum"
                 variant="ghost"
@@ -191,6 +224,8 @@ export function RegisterScreen({ errors, errorText, loading, onSubmit, onBack }:
               value={fullName}
               onChangeText={setFullName}
               errorText={errors?.fullName}
+              textContentType="name"
+              autoComplete="name"
               required
             />
             <PhoneField
@@ -210,8 +245,12 @@ export function RegisterScreen({ errors, errorText, loading, onSubmit, onBack }:
               autoCapitalize="none"
               keyboardType="email-address"
               errorText={errors?.email}
+              textContentType="username"
+              autoComplete="email"
               required
             />
+            {/* `newPassword`: iOS burada güçlü parola önerir ve kaydeder —
+                mevcut parolayı doldurmaya çalışmaz. */}
             <TextField
               label="Şifre"
               placeholder="En az 8 karakter"
@@ -221,6 +260,8 @@ export function RegisterScreen({ errors, errorText, loading, onSubmit, onBack }:
               secureTextEntry
               errorText={errors?.password}
               helperText={errors?.password ? undefined : 'En az 8 karakter, bir rakam içermeli.'}
+              textContentType="newPassword"
+              autoComplete="new-password"
               required
             />
 

@@ -50,6 +50,8 @@ export function ChangePasswordScreen({
             onChangeText={(t) => onChange({ current: t })}
             secureTextEntry
             errorText={errors.current}
+            textContentType="password"
+            autoComplete="current-password"
             required
           />
           <TextField
@@ -61,6 +63,8 @@ export function ChangePasswordScreen({
             secureTextEntry
             errorText={errors.next}
             helperText={errors.next ? undefined : 'En az 8 karakter, bir rakam içermeli.'}
+            textContentType="newPassword"
+            autoComplete="new-password"
             required
           />
           <TextField
@@ -71,6 +75,8 @@ export function ChangePasswordScreen({
             onChangeText={(t) => onChange({ confirm: t })}
             secureTextEntry
             errorText={errors.confirm}
+            textContentType="newPassword"
+            autoComplete="new-password"
             required
           />
         </View>

@@ -57,13 +57,16 @@ export function LoginContainer() {
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
   const error = useAuthStore((s) => s.error);
+  const rememberedIdentifier = useAuthStore((s) => s.rememberedIdentifier);
+  const rememberIdentifier = useAuthStore((s) => s.rememberIdentifier);
   const [clientError, setClientError] = useState<string>();
   // Başarıda RootNavigator koşullu olarak RoleSelect'e geçer — navigate gerekmez.
   return (
     <LoginScreen
       loading={loading}
       errorText={clientError ?? error}
-      onSubmit={({ identifier, password }) => {
+      initialIdentifier={rememberedIdentifier ?? undefined}
+      onSubmit={({ identifier, password, remember }) => {
         const idError = identifierError(identifier);
         if (idError) {
           setClientError(idError);
@@ -74,6 +77,8 @@ export function LoginContainer() {
           return;
         }
         setClientError(undefined);
+        // Kimlik giriş denemesinde kaydedilir; parola saklanmaz.
+        rememberIdentifier(remember ? identifier : null);
         login({ email: identifier.trim(), password });
       }}
       onForgotPassword={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
