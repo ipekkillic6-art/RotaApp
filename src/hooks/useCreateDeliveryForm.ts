@@ -76,6 +76,11 @@ export function useCreateDeliveryForm() {
       speed: form.speed,
       packageDescription: form.packageNote.trim() || undefined,
       paymentCardId: form.paymentCardId ?? undefined,
+      // Bu üçü eskiden formda toplanıp payload'a hiç konmuyordu; girilen
+      // alıcı bilgisi "Devam et"te kayboluyordu.
+      senderPhone: form.senderPhone.trim() || undefined,
+      recipientName: form.recipientName.trim() || undefined,
+      recipientPhone: form.recipientPhone.trim() || undefined,
     };
   }, [form, findAddress]);
 

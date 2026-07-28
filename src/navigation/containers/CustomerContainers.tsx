@@ -114,6 +114,9 @@ export function CreateContainer() {
     error,
   } = useCreateDeliveryForm();
 
+  // Gönderici hesabın sahibidir; formda düzenlenmez, oturumdan gelir.
+  const senderName = useAuthStore((s) => s.user?.name ?? 'Hesap sahibi');
+
   // Üyelik yalnızca AÇIKLAMA için — indirimi sunucu uygular, istemci istemez.
   const membership = useMembershipStore((s) => s.membership);
   const fetchMembership = useMembershipStore((s) => s.fetch);
@@ -137,6 +140,7 @@ export function CreateContainer() {
       onChange={update}
       onAddCard={() => navigation.navigate(ROUTES.ADD_CARD)}
       canProceed={canProceed(step)}
+      senderName={senderName}
       price={price}
       priceDistanceKm={quoteDistanceKm ?? undefined}
       priceLoading={quoting}

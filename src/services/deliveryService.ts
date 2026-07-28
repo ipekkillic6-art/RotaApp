@@ -46,6 +46,12 @@ export interface CreateDeliveryPayload extends QuotePayload {
   scheduledAt?: string;
   /** Ödemenin alınacağı kayıtlı kart. */
   paymentCardId?: string;
+  /** Gönderenin telefonu — kurye alış sırasında bu numaradan arar. */
+  senderPhone?: string;
+  /** Teslim alacak kişi. Adres defterindeki kişiden farklı olabilir. */
+  recipientName?: string;
+  /** Teslimat kodu bu numaraya gider; kurye teslimatta bu numarayı arar. */
+  recipientPhone?: string;
 }
 
 export const deliveryService = {
@@ -81,7 +87,31 @@ export const deliveryService = {
     }),
 
   create: (payload: CreateDeliveryPayload) =>
-    api.post<Delivery>('/deliveries', { body: payload, mock: () => deliveries.onTheWay }),
+    api.post<Delivery>('/deliveries', {
+      body: payload,
+      mock: () => {
+        // Akışta girilen alıcı, adres defterindeki kişiden farklı olabilir.
+        // Teslimat adresine yansıtılır ki kurye DOĞRU kişiyi arasın ve
+        // teslimat kodu doğru numaraya gitsin.
+        const base = deliveries.onTheWay;
+        return {
+          ...base,
+          speed: payload.speed,
+          packageType: payload.packageType,
+          packageDescription: payload.packageDescription ?? base.packageDescription,
+          scheduledAt: payload.scheduledAt ?? base.scheduledAt,
+          pickupAddress: {
+            ...payload.pickupAddress,
+            contactPhone: payload.senderPhone?.trim() || payload.pickupAddress.contactPhone,
+          },
+          dropoffAddress: {
+            ...payload.dropoffAddress,
+            contactName: payload.recipientName?.trim() || payload.dropoffAddress.contactName,
+            contactPhone: payload.recipientPhone?.trim() || payload.dropoffAddress.contactPhone,
+          },
+        };
+      },
+    }),
 
   cancel: (id: string) =>
     api.post<void>(`/deliveries/${id}/cancel`, { mock: () => undefined }),

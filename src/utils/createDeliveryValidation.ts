@@ -1,3 +1,4 @@
+import { phoneError } from './authValidation.ts';
 import type { DeliverySpeed, PackageTypeId } from '../types';
 
 /**
@@ -34,6 +35,24 @@ export const INITIAL_FORM: CreateDeliveryForm = {
   paymentCardId: null,
 };
 
+export type ContactFieldKey = 'senderPhone' | 'recipientName' | 'recipientPhone';
+
+/**
+ * "Gönderici ve alıcı" adımının hataları.
+ *
+ * Alıcı numarası kritik: teslimat kodu oraya gönderiliyor ve kurye teslimat
+ * sırasında o numarayı arıyor. Bu yüzden sadece boş olmaması yetmez.
+ */
+export function contactErrors(form: CreateDeliveryForm): Partial<Record<ContactFieldKey, string>> {
+  const errors: Partial<Record<ContactFieldKey, string>> = {};
+  const senderError = phoneError(form.senderPhone);
+  if (senderError) errors.senderPhone = senderError;
+  if (!form.recipientName.trim()) errors.recipientName = 'Alıcının adı gerekli.';
+  const recipientError = phoneError(form.recipientPhone);
+  if (recipientError) errors.recipientPhone = recipientError;
+  return errors;
+}
+
 export interface PriceState {
   quoting: boolean;
   quoteFailed: boolean;
@@ -51,11 +70,9 @@ export function canProceedForStep(
     case 'dropoff':
       return !!form.dropoffAddressId && form.dropoffAddressId !== form.pickupAddressId;
     case 'contacts':
-      return (
-        form.recipientName.trim().length > 0 &&
-        form.recipientPhone.trim().length > 0 &&
-        form.senderPhone.trim().length > 0
-      );
+      // Numaralar yalnızca dolu değil, ARANABİLİR olmalı: teslimat kodu bu
+      // numaraya gidiyor ve kurye buradan arıyor.
+      return Object.keys(contactErrors(form)).length === 0;
     case 'price':
       return !price.quoting && !price.quoteFailed;
     case 'payment':
