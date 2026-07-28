@@ -26,8 +26,15 @@ interface AuthState {
   error?: string;
   /** Hata bir forma alanına aitse alanın adı (örn. `'email'`). */
   errorField?: string;
+  /**
+   * "Beni hatırla" ile saklanmış e-posta/telefon — giriş alanını önceden
+   * doldurur. Parola saklanmaz; onu iOS Keychain (AutoFill) doldurur.
+   */
+  rememberedIdentifier: string | null;
 
   restore: () => Promise<void>;
+  /** Kimliği hatırla (veya `null` ile unut). */
+  rememberIdentifier: (identifier: string | null) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<boolean>;
@@ -43,9 +50,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: false,
   error: undefined,
   errorField: undefined,
+  rememberedIdentifier: null,
 
   restore: async () => {
     try {
+      // Hatırlanan kimlik oturumdan bağımsızdır: çıkış yapılmış olsa da
+      // giriş alanını doldurmalı. Bu yüzden token kontrolünden önce okunur.
+      const remembered = await storage.get<string>(STORAGE_KEYS.rememberedIdentifier);
+      set({ rememberedIdentifier: remembered ?? null });
+
       const token = await secure.get(STORAGE_KEYS.authToken);
       if (!token) {
         set({ restoring: false });
@@ -59,6 +72,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       set({ restoring: false });
     }
+  },
+
+  rememberIdentifier: async (identifier) => {
+    const value = identifier?.trim() || null;
+    if (value) await storage.set(STORAGE_KEYS.rememberedIdentifier, value);
+    else await storage.remove(STORAGE_KEYS.rememberedIdentifier);
+    set({ rememberedIdentifier: value });
   },
 
   login: async (payload) => {

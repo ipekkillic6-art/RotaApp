@@ -27,7 +27,11 @@ export interface TextFieldProps
     | 'maxLength'
     | 'returnKeyType'
     | 'onSubmitEditing'
+    // AutoFill: iOS `textContentType`'a, Android `autoComplete`'e bakar. İkisi
+    // birlikte verilmezse parola yöneticisi alanı tanımaz ve "Parolayı
+    // kaydedeyim mi?" önerisi hiç çıkmaz.
     | 'textContentType'
+    | 'autoComplete'
   > {
   value: string;
   onChangeText: (text: string) => void;

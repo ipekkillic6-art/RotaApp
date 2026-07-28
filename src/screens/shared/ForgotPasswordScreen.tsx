@@ -87,6 +87,8 @@ export function ForgotPasswordScreen({
             autoCapitalize="none"
             keyboardType="email-address"
             errorText={localError}
+            textContentType="username"
+            autoComplete="email"
             required
           />
         </View>
