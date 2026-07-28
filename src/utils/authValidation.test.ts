@@ -7,8 +7,20 @@ import {
   identifierError,
   isValidEmail,
   passwordError,
+  phoneError,
   type ChangePasswordForm,
 } from './authValidation.ts';
+
+test('phoneError boş ve eksik haneli numarayı reddeder', () => {
+  assert.equal(phoneError(''), 'Telefon gerekli.');
+  assert.equal(phoneError('   '), 'Telefon gerekli.');
+  assert.equal(phoneError('532 114'), 'Geçerli bir telefon numarası gir.');
+});
+
+test('phoneError geçerli numarayı kabul eder', () => {
+  assert.equal(phoneError('532 114 22 07'), undefined);
+  assert.equal(phoneError('0532 114 22 07'), undefined);
+});
 
 test('isValidEmail geçerli/geçersiz e-postayı ayırır', () => {
   assert.equal(isValidEmail('ipek@rota.app'), true);

@@ -28,6 +28,7 @@ import {
   emailError,
   identifierError,
   passwordError,
+  phoneError,
   INITIAL_CHANGE_PASSWORD,
   type ChangePasswordForm,
 } from '../../utils/authValidation';
@@ -95,10 +96,12 @@ export function RegisterContainer() {
   const errorField = useAuthStore((s) => s.errorField);
   const [errors, setErrors] = useState<RegisterErrors>({});
 
-  // Sunucu hatayı bir alana bağladıysa (örn. e-posta zaten kayıtlı) uyarıyı
-  // o alanın altında göster; üstteki genel banda düşürme.
+  // Sunucu hatayı bir alana bağladıysa (örn. e-posta/telefon zaten kayıtlı)
+  // uyarıyı o alanın altında göster; üstteki genel banda düşürme.
   const fieldErrors: RegisterErrors =
-    errorField === 'email' && error ? { ...errors, email: error } : errors;
+    error && (errorField === 'email' || errorField === 'phone')
+      ? { ...errors, [errorField]: error }
+      : errors;
 
   return (
     <RegisterScreen
@@ -106,16 +109,25 @@ export function RegisterContainer() {
       errors={fieldErrors}
       errorText={errorField ? undefined : error}
       onBack={() => navigation.goBack()}
-      onSubmit={({ fullName, email, password }) => {
+      onSubmit={({ fullName, phone, email, password, terms }) => {
         const next: RegisterErrors = {};
         if (!fullName.trim()) next.fullName = 'Ad soyad gerekli.';
+        const phError = phoneError(phone);
+        if (phError) next.phone = phError;
         const emError = emailError(email);
         if (emError) next.email = emError;
         const pwError = passwordError(password);
         if (pwError) next.password = pwError;
+        if (!terms) next.terms = 'Devam etmek için koşulları kabul etmelisin.';
         setErrors(next);
         if (Object.keys(next).length > 0) return;
-        register({ name: fullName.trim(), email: email.trim(), password, role: 'customer' });
+        register({
+          name: fullName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          password,
+          role: 'customer',
+        });
       }}
     />
   );
