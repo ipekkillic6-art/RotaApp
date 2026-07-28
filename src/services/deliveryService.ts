@@ -1,6 +1,7 @@
 import { api } from '../utils/api';
 import { deliveries, activeDeliveries, deliveryHistory } from '../mocks/deliveries';
 import { currentMembership } from './membershipService';
+import { estimatedRoadDistanceKm } from '../utils/geo';
 import { hasActiveBenefits } from '../utils/membership';
 import { quotePrice } from '../utils/pricing';
 import type {
@@ -15,19 +16,29 @@ const byId = (id: string): Delivery =>
   (deliveries as Record<string, Delivery>)[id] ?? deliveries.onTheWay;
 
 /**
- * Mock mesafe.
+ * Adreslerin koordinatı yoksa kullanılan yedek mesafe.
  *
- * Adreslerin koordinatı her zaman dolu olmadığı için rota mesafesi burada
- * sabit. Gerçek backend bunu haritadan hesaplar; ekrandaki "11,4 km için"
- * satırı da bu sabitten beslenir ki fiyat ile açıklama tutarlı olsun.
+ * Koordinat varsa mesafe gerçekten hesaplanır (bkz. `estimatedRoadDistanceKm`).
+ * Elle girilmiş, hiç haritadan seçilmemiş adreslerde koordinat olmayabilir.
  */
-export const MOCK_DISTANCE_KM = 11.4;
+export const FALLBACK_DISTANCE_KM = 11.4;
 
 export interface QuotePayload {
   pickupAddress: Address;
   dropoffAddress: Address;
   packageType: PackageTypeId;
   speed: DeliverySpeed;
+}
+
+/**
+ * Teklif yanıtı.
+ *
+ * Fiyatın yanında hesabın dayandığı mesafe de döner — ekrandaki
+ * "Mesafe ücreti · 11,4 km" satırı ile ücret aynı kaynaktan beslensin.
+ */
+export interface DeliveryQuote {
+  price: PriceBreakdown;
+  distanceKm: number;
 }
 
 export interface CreateDeliveryPayload extends QuotePayload {
@@ -48,16 +59,25 @@ export const deliveryService = {
     api.get<Delivery>(`/deliveries/${id}`, { signal, mock: () => byId(id) }),
 
   quote: (payload: QuotePayload) =>
-    api.post<PriceBreakdown>('/deliveries/quote', {
+    api.post<DeliveryQuote>('/deliveries/quote', {
       body: payload,
-      mock: () =>
-        quotePrice({
-          distanceKm: MOCK_DISTANCE_KM,
-          packageType: payload.packageType,
-          speed: payload.speed,
-          // Hak ediş sunucuda çözülür — istemci indirim isteyemez.
-          membershipActive: hasActiveBenefits(currentMembership(), new Date()),
-        }),
+      mock: () => {
+        // Adreslerin koordinatı varsa mesafe gerçekten hesaplanır; yoksa
+        // (elle girilmiş adres) yedeğe düşülür.
+        const distanceKm =
+          estimatedRoadDistanceKm(payload.pickupAddress, payload.dropoffAddress) ??
+          FALLBACK_DISTANCE_KM;
+        return {
+          distanceKm,
+          price: quotePrice({
+            distanceKm,
+            packageType: payload.packageType,
+            speed: payload.speed,
+            // Hak ediş sunucuda çözülür — istemci indirim isteyemez.
+            membershipActive: hasActiveBenefits(currentMembership(), new Date()),
+          }),
+        };
+      },
     }),
 
   create: (payload: CreateDeliveryPayload) =>
