@@ -21,6 +21,12 @@ export function emailError(email: string): string | undefined {
   return isValidEmail(email) ? undefined : 'Geçerli bir e-posta gir.';
 }
 
+/** Telefon alanı için hata mesajı (boş/geçersiz). */
+export function phoneError(phone: string): string | undefined {
+  if (!phone.trim()) return 'Telefon gerekli.';
+  return isValidPhone(phone) ? undefined : 'Geçerli bir telefon numarası gir.';
+}
+
 /** Parola: en az 8 karakter ve en az bir rakam. */
 export function passwordError(password: string): string | undefined {
   if (password.length < 8) return 'Şifre en az 8 karakter olmalı.';

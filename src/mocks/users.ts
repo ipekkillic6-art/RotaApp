@@ -28,6 +28,27 @@ export const findUserByEmail = (email: string): MockUser | undefined => {
 export const isEmailTaken = (email: string): boolean => findUserByEmail(email) !== undefined;
 
 /**
+ * Telefonu karşılaştırma için tekilleştirir: yalnızca rakamlar.
+ * "532 114 22 07", "05321142207" ve "+90 532 114 22 07" aynı numaradır.
+ */
+export const normalizePhone = (phone: string): string => {
+  const digits = phone.replace(/\D/g, '');
+  // Ülke kodu (90) ve baştaki 0 atılır; karşılaştırma 10 hane üzerinden yapılır.
+  if (digits.length > 10 && digits.startsWith('90')) return digits.slice(-10);
+  return digits.length > 10 ? digits.slice(-10) : digits.replace(/^0/, '');
+};
+
+/** Telefon ile kullanıcı bul. Biçim farkları (boşluk, 0, +90) aynı numaradır. */
+export const findUserByPhone = (phone: string): MockUser | undefined => {
+  const value = normalizePhone(phone);
+  if (value.length < 10) return undefined;
+  return mockUsers.find((u) => u.phone && normalizePhone(u.phone) === value);
+};
+
+/** Bu telefon ile zaten bir hesap var mı? */
+export const isPhoneTaken = (phone: string): boolean => findUserByPhone(phone) !== undefined;
+
+/**
  * Demo hesapları. Hepsinin parolası `rota1234`.
  * Giriş: e-posta VEYA telefon + parola.
  */

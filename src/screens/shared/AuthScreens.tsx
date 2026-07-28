@@ -190,6 +190,8 @@ export interface RegisterValues {
   phone: string;
   email: string;
   password: string;
+  /** Koşullar kabul edildi mi — buton kilidine ek olarak container da doğrular. */
+  terms: boolean;
 }
 
 export interface RegisterScreenProps {
@@ -280,7 +282,7 @@ export function RegisterScreen({ errors, errorText, loading, onSubmit, onBack }:
 
             <Button
               label="Hesabı oluştur"
-              onPress={() => onSubmit?.({ fullName, phone, email, password })}
+              onPress={() => onSubmit?.({ fullName, phone, email, password, terms })}
               loading={loading}
               disabled={
                 fullName.trim().length === 0 ||

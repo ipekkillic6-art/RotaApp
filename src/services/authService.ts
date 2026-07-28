@@ -1,7 +1,9 @@
 import { api, ApiError } from '../utils/api';
 import {
   findUserByEmail,
+  findUserByPhone,
   isEmailTaken,
+  isPhoneTaken,
   mockUsers,
   normalizeEmail,
   type MockUser,
@@ -30,6 +32,8 @@ export interface LoginPayload {
 export interface RegisterPayload {
   name: string;
   email: string;
+  /** Kurye bu numaradan ulaşır; girişte e-posta yerine de kullanılabilir. */
+  phone: string;
   password: string;
   role: UserRole;
 }
@@ -40,22 +44,21 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
-const digitsOnly = (value: string): string => value.replace(/\D/g, '');
-
 const sessionFor = (user: MockUser): AuthSession => ({
   token: `mock-token-${user.id}`,
   refreshToken: `mock-refresh-${user.id}`,
   user: { id: user.id, name: user.name, email: user.email, role: user.role },
 });
 
-/** E-posta VEYA telefon ile kullanıcı bul. */
-const findByIdentifier = (identifier: string): MockUser | undefined => {
-  const value = identifier.trim().toLowerCase();
-  const phone = digitsOnly(identifier);
-  return mockUsers.find(
-    (u) => u.email.toLowerCase() === value || (phone.length >= 10 && digitsOnly(u.phone) === phone),
-  );
-};
+/**
+ * E-posta VEYA telefon ile kullanıcı bul.
+ *
+ * Her iki arama da kayıt tarafındaki normalize kurallarını kullanır — aksi
+ * halde "532 114 22 07" olarak kaydolan biri "0532 114 22 07" yazarak giriş
+ * yapamazdı.
+ */
+const findByIdentifier = (identifier: string): MockUser | undefined =>
+  findUserByEmail(identifier) ?? findUserByPhone(identifier);
 
 export const authService = {
   login: (payload: LoginPayload) =>
@@ -85,6 +88,15 @@ export const authService = {
             { field: 'email' },
           );
         }
+        // Telefon da tekil: girişte kimlik olarak kullanılabildiği için iki
+        // hesap aynı numarayı taşırsa hangisine giriş yapılacağı belirsizleşir.
+        if (isPhoneTaken(payload.phone)) {
+          throw new ApiError(
+            409,
+            'Bu telefon numarası ile zaten bir hesap var.',
+            { field: 'phone' },
+          );
+        }
         const user: MockUser = {
           id: `u-${Date.now()}`,
           name: payload.name,
@@ -92,7 +104,7 @@ export const authService = {
           email: normalizeEmail(payload.email),
           password: payload.password,
           role: payload.role,
-          phone: '',
+          phone: payload.phone.trim(),
         };
         mockUsers.push(user);
         return sessionFor(user);
