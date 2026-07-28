@@ -6,5 +6,6 @@ export * from './analytics';
 export * from './settings';
 export * from './support';
 export * from './payment';
+export * from './membership';
 export * from './chat';
 export * from './users';

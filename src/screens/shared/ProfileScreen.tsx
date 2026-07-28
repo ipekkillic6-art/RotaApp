@@ -1,5 +1,14 @@
 import { View } from 'react-native';
-import { Bell, ChevronRight, CreditCard, HelpCircle, LogOut, MapPin, Shield } from 'lucide-react-native';
+import {
+  Bell,
+  ChevronRight,
+  CreditCard,
+  HelpCircle,
+  LogOut,
+  MapPin,
+  Shield,
+  Sparkles,
+} from 'lucide-react-native';
 import {
   AppHeader,
   Avatar,
@@ -15,7 +24,13 @@ import {
 import { ScreenScaffold } from '../_shared/ScreenScaffold';
 import type { UserRole } from '../../types';
 
-export type ProfileMenuKey = 'addresses' | 'payment' | 'notifications' | 'privacy' | 'help';
+export type ProfileMenuKey =
+  | 'addresses'
+  | 'membership'
+  | 'payment'
+  | 'notifications'
+  | 'privacy'
+  | 'help';
 
 export interface ProfileScreenProps {
   userName: string;
@@ -26,8 +41,16 @@ export interface ProfileScreenProps {
   loggingOut?: boolean;
 }
 
-const MENU: Array<{ key: ProfileMenuKey; icon: typeof MapPin; label: string }> = [
+/** `roles` verilmeyen satır her rolde görünür. */
+const MENU: Array<{
+  key: ProfileMenuKey;
+  icon: typeof MapPin;
+  label: string;
+  roles?: UserRole[];
+}> = [
   { key: 'addresses', icon: MapPin, label: 'Adreslerim' },
+  // Rota Plus teslimat ücretine bağlı bir avantaj paketi — yalnızca müşteride.
+  { key: 'membership', icon: Sparkles, label: 'Rota Plus üyeliğim', roles: ['customer'] },
   { key: 'payment', icon: CreditCard, label: 'Ödeme yöntemlerim' },
   { key: 'notifications', icon: Bell, label: 'Bildirim ayarları' },
   { key: 'privacy', icon: Shield, label: 'Gizlilik ve güvenlik' },
@@ -43,6 +66,7 @@ const MENU: Array<{ key: ProfileMenuKey; icon: typeof MapPin; label: string }> =
 export function ProfileScreen({ userName, email, role, onSelectItem, onLogout, loggingOut = false }: ProfileScreenProps) {
   const theme = useTheme();
   const meta = ROLE_META[role];
+  const menu = MENU.filter((item) => !item.roles || item.roles.includes(role));
 
   return (
     <ScreenScaffold role={role} activeTab="profile" header={<AppHeader title="Profil" variant="large" />}>
@@ -65,7 +89,7 @@ export function ProfileScreen({ userName, email, role, onSelectItem, onLogout, l
         </Surface>
 
         <Surface>
-          {MENU.map((item, i) => (
+          {menu.map((item, i) => (
             <Touchable
               key={item.label}
               onPress={() => onSelectItem?.(item.key)}

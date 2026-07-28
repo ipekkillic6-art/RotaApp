@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   formatPrice,
+  formatDate,
+  formatDateWithYear,
   formatDistance,
   formatDuration,
   formatPercent,
@@ -9,6 +11,13 @@ import {
   maskPhone,
   formatRating,
 } from './format.ts';
+
+test('formatDateWithYear yılı yazar, formatDate yazmaz', () => {
+  // Üyelik yenilemesi aylar/yıllar sonrasıdır; yıl olmadan tarih belirsiz kalır.
+  const iso = '2027-07-01T10:00:00.000Z';
+  assert.match(formatDateWithYear(iso), /2027/);
+  assert.doesNotMatch(formatDate(iso), /2027/);
+});
 
 test('formatPrice: tanımsız → tire', () => {
   assert.equal(formatPrice(undefined), '—');

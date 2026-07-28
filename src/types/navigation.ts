@@ -46,6 +46,7 @@ export type RootStackParamList = {
   HelpSupport: undefined;
   PaymentMethods: undefined;
   AddCard: undefined;
+  Membership: undefined;
 
   /* rol tab host'ları */
   CustomerTabs: NavigatorScreenParams<CustomerTabParamList> | undefined;

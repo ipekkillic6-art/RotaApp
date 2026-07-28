@@ -45,6 +45,17 @@ export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(LOCALE, DATE_FORMAT);
 }
 
+/**
+ * `"1 Temmuz 2027"` — yılı da yazar.
+ *
+ * `formatDate` yılı bilinçli olarak atar; teslimat tarihleri günler içindedir
+ * ve yıl gürültüdür. Aylar/yıllar sonrasını gösteren yerlerde (üyelik
+ * yenileme tarihi) yıl olmadan tarih belirsiz kalır.
+ */
+export function formatDateWithYear(iso: string): string {
+  return new Date(iso).toLocaleDateString(LOCALE, { ...DATE_FORMAT, year: 'numeric' });
+}
+
 export function formatDateTime(iso: string): string {
   return `${formatDate(iso)} · ${formatTime(iso)}`;
 }
