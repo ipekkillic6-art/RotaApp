@@ -17,6 +17,7 @@ import { EarningsScreen, CourierPerformanceScreen } from '../../screens/courier/
 import { useCourierStore } from '../../stores/courierStore';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useCourierLocationTracking } from '../../hooks/useCourierLocationTracking';
+import { useOpenDirections } from '../../hooks/useOpenDirections';
 import { deliveries, courierOffers } from '../../mocks/deliveries';
 import { couriers } from '../../mocks/couriers';
 import {
@@ -128,12 +129,17 @@ export function CourierTasksContainer() {
 export function CourierTaskDetailContainer() {
   const navigation = useNavigation<Nav>();
   const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'CourierTaskDetail'>>().params;
+  const openDirections = useOpenDirections();
+  const task = byId(deliveryId);
+  // Paket alınmadan önce hedef alış noktası, sonrasında teslimat noktasıdır.
+  const started = task.status !== 'assigned' && task.status !== 'accepted';
   return (
     <CourierTaskDetailScreen
-      task={byId(deliveryId)}
+      task={task}
       onBack={() => navigation.goBack()}
       onStart={() => navigation.navigate(ROUTES.PICKUP, { deliveryId, stage: 'arriving' })}
       onUpdateStatus={() => navigation.navigate(ROUTES.ON_THE_WAY, { deliveryId })}
+      onNavigate={() => openDirections(started ? task.dropoffAddress : task.pickupAddress)}
     />
   );
 }
@@ -170,17 +176,21 @@ export function PickupContainer() {
 export function OnTheWayContainer() {
   const navigation = useNavigation<Nav>();
   const updateStatus = useCourierStore((s) => s.updateStatus);
+  const openDirections = useOpenDirections();
   const { deliveryId } = useRoute<RouteProp<RootStackParamList, 'OnTheWay'>>().params;
 
   useEffect(() => {
     updateStatus(deliveryId, 'on_the_way');
   }, [deliveryId, updateStatus]);
 
+  const task = byId(deliveryId);
   return (
     <OnTheWayScreen
-      task={byId(deliveryId)}
+      task={task}
       onBack={() => navigation.goBack()}
       onArrived={() => navigation.navigate(ROUTES.VERIFY, { deliveryId })}
+      // Yolda adımında hedef her zaman teslimat noktası.
+      onNavigate={() => openDirections(task.dropoffAddress)}
     />
   );
 }
