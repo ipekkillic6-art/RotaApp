@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { hitSlopFor } from '../../tokens';
@@ -92,7 +92,7 @@ export function IconButton({
   testID,
 }: IconButtonProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const sizing = SIZE_MAP[size];
 
   const colors = {

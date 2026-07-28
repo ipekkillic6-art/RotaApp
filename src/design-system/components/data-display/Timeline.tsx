@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Typography } from '../../foundations/Typography';
 
@@ -58,7 +58,7 @@ const makeStyles = (theme: Theme) =>
  */
 export function Timeline({ items, style }: TimelineProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={style} accessibilityRole="list">

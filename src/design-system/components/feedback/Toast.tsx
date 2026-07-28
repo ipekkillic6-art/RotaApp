@@ -8,7 +8,7 @@ import {
   XCircle,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
@@ -75,7 +75,7 @@ export function Toast({
   style,
 }: ToastProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

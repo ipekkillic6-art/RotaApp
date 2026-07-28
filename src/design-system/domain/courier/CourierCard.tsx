@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Clock, Layers, Package, Route } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Divider } from '../../foundations/Layout';
 import { Surface } from '../../foundations/Surface';
 import { Touchable } from '../../foundations/Touchable';
@@ -63,7 +63,7 @@ export function CourierCard({
   style,
 }: CourierCardProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const compact = variant === 'compact';
   const vehicle = VEHICLE_META[courier.vehicleType];
   const status = STATUS_LABEL[courier.status];

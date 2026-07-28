@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 import type { Address } from '../../../types';
 
@@ -41,7 +41,7 @@ export function AddressBlock({
   style,
 }: AddressBlockProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const compact = variant === 'compact';
 
   const entry = (address: Address, isPickup: boolean) => (

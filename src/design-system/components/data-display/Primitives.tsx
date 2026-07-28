@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Star } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Typography } from '../../foundations/Typography';
 import { formatDateTime, formatPrice, formatRating } from '../../../utils/format';
@@ -29,7 +29,7 @@ export interface RatingProps {
  */
 export function Rating({ value, count, size = 'sm', style }: RatingProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   return (
     <View
       style={[styles.row, style]}
@@ -123,7 +123,7 @@ export interface MetaItemProps {
 /** Icon + value pair used across cards for distance, duration and counts. */
 export function MetaItem({ icon, label, tone = 'secondary' }: MetaItemProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.row}>
       <Icon icon={icon} size="xs" tone="muted" />

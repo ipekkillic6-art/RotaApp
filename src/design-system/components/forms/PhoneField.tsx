@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 import { Divider } from '../../foundations/Layout';
 import { TextField, type TextFieldProps } from './TextField';
@@ -34,7 +34,7 @@ export function formatTrPhone(digits: string): string {
  */
 export function DialCodePrefix({ dialCode = '+90' }: { dialCode?: string }) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.prefix}>
       <Typography variant="body" tone="secondary" tabular>

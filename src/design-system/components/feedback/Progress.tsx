@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 
 const makeStyles = (theme: Theme) =>
@@ -37,7 +37,7 @@ export function ProgressBar({
   style,
 }: ProgressBarProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const clamped = Math.max(0, Math.min(1, value));
   const width = useRef(new Animated.Value(clamped)).current;
 
@@ -107,7 +107,7 @@ export interface StepProgressProps {
 /** Segmented progress for multi-step forms — reads faster than a percentage. */
 export function StepProgress({ current, total, label, style }: StepProgressProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={[{ gap: theme.spacing.sm }, style]}>
@@ -162,7 +162,7 @@ export function LoadingSpinner({
   style,
 }: LoadingSpinnerProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View

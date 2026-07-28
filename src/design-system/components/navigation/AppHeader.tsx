@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { ChevronLeft, type LucideIcon } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 import { IconButton } from '../buttons/IconButton';
 
@@ -71,7 +71,7 @@ export function AppHeader({
   style,
 }: AppHeaderProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   const showInlineTitle = variant === 'default' && !center;
   // A centred title needs symmetric edges; with a back button and no actions

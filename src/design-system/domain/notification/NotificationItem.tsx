@@ -14,7 +14,7 @@ import {
   XOctagon,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
@@ -83,7 +83,7 @@ const makeStyles = (theme: Theme) =>
  */
 export function NotificationItem({ notification, onPress, style }: NotificationItemProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const meta = KIND_META[notification.kind];
 
   const toneColor = {

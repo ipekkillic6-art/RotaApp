@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Typography } from '../../foundations/Typography';
 import { initials as toInitials } from '../../../utils/format';
 import type { AvatarSizeToken } from '../../tokens';
@@ -52,7 +52,7 @@ const makeStyles = (theme: Theme) =>
  */
 export function Avatar({ name, imageUrl, size = 'md', status, style }: AvatarProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
   const [failed, setFailed] = useState(false);
 
   const px = theme.avatarSize[size];

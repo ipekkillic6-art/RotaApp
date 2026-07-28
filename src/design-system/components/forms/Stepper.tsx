@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Minus, Plus } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Touchable } from '../../foundations/Touchable';
 import { Typography } from '../../foundations/Typography';
@@ -59,7 +59,7 @@ export function Stepper({
   unit,
 }: StepperProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   const canDecrease = !disabled && value - step >= min;
   const canIncrease = !disabled && value + step <= max;

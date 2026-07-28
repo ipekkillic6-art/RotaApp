@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Gift, Package, Wallet } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Icon } from '../../foundations/Icon';
 import { Divider } from '../../foundations/Layout';
 import { Surface } from '../../foundations/Surface';
@@ -52,7 +52,7 @@ export function EarningsCard({
   style,
 }: EarningsCardProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <Surface

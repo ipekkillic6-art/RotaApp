@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Clock, Route, User } from 'lucide-react-native';
-import { useTheme, type Theme } from '../../themes';
+import { useTheme, useThemedStyles, type Theme } from '../../themes';
 import { Divider } from '../../foundations/Layout';
 import { Surface } from '../../foundations/Surface';
 import { Touchable } from '../../foundations/Touchable';
@@ -86,7 +86,7 @@ export function DeliveryCard({
   style,
 }: DeliveryCardProps) {
   const theme = useTheme();
-  const styles = makeStyles(theme);
+  const styles = useThemedStyles(makeStyles);
 
   const pkg = packageTypeMeta(delivery.packageType);
   const compact = variant === 'compact';
